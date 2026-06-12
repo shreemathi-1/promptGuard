@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "version": "1.0",
+  "description": "DLP Guardian policy configuration",
+  "policies": [
+    {
+      "id": "block-private-keys",
+      "name": "Block Private Keys",
+      "description": "Hard block on any private key material",
+      "enabled": true,
+      "conditions": {
+        "categories": ["PRIVATE_KEY"]
+      },
+      "action": "BLOCK"
+    },
+    {
+      "id": "block-aws-keys",
+      "name": "Block AWS Credentials",
+      "description": "Block prompts containing AWS access keys",
+      "enabled": true,
+      "conditions": {
+        "ruleIds": ["aws-access-key", "aws-secret-key"]
+      },
+      "action": "BLOCK"
+    },
+    {
+      "id": "block-openai-keys",
+      "name": "Block OpenAI Keys",
+      "description": "Block prompts containing OpenAI API keys",
+      "enabled": true,
+      "conditions": {
+        "ruleIds": ["openai-key"]
+      },
+      "action": "BLOCK"
+    },
+    {
+      "id": "block-db-strings",
+      "name": "Block Database Credentials",
+      "description": "Block connection strings with embedded passwords",
+      "enabled": true,
+      "conditions": {
+        "ruleIds": ["db-connection-string"]
+      },
+      "action": "BLOCK"
+    },
+    {
+      "id": "mask-credentials",
+      "name": "Auto-Mask Password Assignments",
+      "description": "Automatically redact password/secret variable assignments",
+      "enabled": true,
+      "conditions": {
+        "categories": ["CREDENTIAL"]
+      },
+      "action": "MASK"
+    },
+    {
+      "id": "warn-jwt",
+      "name": "Warn on JWT Tokens",
+      "description": "Require confirmation before sending JWT tokens",
+      "enabled": true,
+      "conditions": {
+        "ruleIds": ["jwt-token", "bearer-token"]
+      },
+      "action": "WARN"
+    },
+    {
+      "id": "mask-emails",
+      "name": "Mask Email Addresses",
+      "description": "Auto-redact email addresses",
+      "enabled": true,
+      "conditions": {
+        "categories": ["EMAIL"]
+      },
+      "action": "MASK"
+    },
+    {
+      "id": "warn-financial",
+      "name": "Warn on Financial Data",
+      "description": "Warn on credit card numbers",
+      "enabled": true,
+      "conditions": {
+        "categories": ["FINANCIAL"]
+      },
+      "action": "WARN"
+    },
+    {
+      "id": "warn-entropy",
+      "name": "Warn on High-Entropy Strings",
+      "description": "Warn when entropy analysis detects a probable secret",
+      "enabled": true,
+      "conditions": {
+        "ruleIds": ["entropy-detector"]
+      },
+      "action": "WARN"
+    },
+    {
+      "id": "custom-internal-id",
+      "name": "Block Internal Project IDs",
+      "description": "Block internal project code format PRJ-XXX-NNNN",
+      "enabled": false,
+      "conditions": {
+        "ruleIds": ["custom-0"]
+      },
+      "action": "BLOCK"
+    }
+  ]
+}

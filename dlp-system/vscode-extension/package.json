@@ -1,0 +1,117 @@
+{
+  "name": "dlp-guardian",
+  "displayName": "DLP Guardian — AI Prompt Security",
+  "description": "Enterprise Data Loss Prevention for AI assistants in VS Code",
+  "version": "1.0.0",
+  "publisher": "your-publisher-id",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dlp.secureSend",
+        "title": "DLP: Secure Send Selection to AI"
+      },
+      {
+        "command": "dlp.scanCurrentFile",
+        "title": "DLP: Scan Current File for Sensitive Data"
+      },
+      {
+        "command": "dlp.scanClipboard",
+        "title": "DLP: Scan Clipboard"
+      },
+      {
+        "command": "dlp.showAuditLog",
+        "title": "DLP: Show Audit Log"
+      },
+      {
+        "command": "dlp.openSettings",
+        "title": "DLP: Open Policy Settings"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "dlp.guardian",
+        "name": "dlp",
+        "description": "DLP-screened AI relay — scans prompts before sending",
+        "isSticky": false
+      }
+    ],
+    "configuration": {
+      "title": "DLP Guardian",
+      "properties": {
+        "dlp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable DLP scanning"
+        },
+        "dlp.policyFile": {
+          "type": "string",
+          "default": "",
+          "description": "Path to custom policies.json (leave empty for built-in defaults)"
+        },
+        "dlp.auditLogPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to audit log file (default: ~/.dlp-guardian/audit.jsonl)"
+        },
+        "dlp.backendUrl": {
+          "type": "string",
+          "default": "http://localhost:4000",
+          "description": "Optional: URL of DLP backend API for cloud-mode scanning"
+        },
+        "dlp.useBackend": {
+          "type": "boolean",
+          "default": false,
+          "description": "Send scans to backend API instead of local engine"
+        },
+        "dlp.clipboardMonitor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Monitor clipboard for sensitive data"
+        },
+        "dlp.entropyDetection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable entropy-based secret detection"
+        },
+        "dlp.customRules": {
+          "type": "array",
+          "default": [],
+          "description": "Custom regex rules: [{name, pattern, severity}]"
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "dlp.secureSend",
+          "when": "editorHasSelection",
+          "group": "dlp@1"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "axios": "^1.17.0"
+  }
+}
