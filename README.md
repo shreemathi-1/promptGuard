@@ -1,165 +1,199 @@
-# Data Leakage Prevention and Detection System
+# PromptGuard — Pre-Prompt Sensitive Data Protection System
+
+A security-focused **pre-prompt checker** that helps users identify and protect sensitive information before using their prompts with AI chatbots.
 
 ## Overview
 
-The Data Leakage Prevention and Detection (DLP) System is a cybersecurity solution designed to identify, prevent, and monitor the unauthorized exposure of sensitive information. The system consists of two major components:
+Users often include sensitive information in prompts without realizing it. **SecurePrompt** scans prompts before they are submitted to an AI chatbot and identifies potentially sensitive data such as email addresses, phone numbers, API keys, and IP addresses.
 
-Web Application – Provides centralized monitoring, policy management, incident tracking, and reporting.
-VS Code Extension – Detects sensitive information during software development and alerts developers before code containing confidential data is committed or shared.
-
-The project helps organizations reduce the risk of accidental or intentional data leaks by implementing real-time detection mechanisms and proactive security controls.
-
-## Problem Statement
-
-Developers and employees often unintentionally expose sensitive information such as:
-
-API Keys
-Access Tokens
-Database Credentials
-Passwords
-Personally Identifiable Information (PII)
-Confidential Business Data
-
-Traditional security measures typically detect leaks after the data has already been exposed. Organizations require a proactive system capable of identifying risks before data leaves the development environment.
-
-## Proposed Solution
-
-The Data Leakage Prevention and Detection System continuously scans files and user activities to detect sensitive information using predefined security rules and pattern-matching techniques.
-
-The VS Code extension performs real-time detection during development, while the web application provides centralized management, monitoring, analytics, and incident reporting.
+The system allows users to **review detected information, optionally mask it, and use the sanitized prompt** with their preferred AI chatbot. A centralized dashboard provides visibility into detected security incidents.
 
 ## Key Features
 
-VS Code Extension
-Real-time code scanning
-API key detection
-Password detection
-Secret token detection
-Credential exposure alerts
-Warning notifications
-Security recommendations
-Lightweight integration
-Web Application
-Centralized dashboard
-Incident management
-Alert monitoring
-Leak statistics visualization
-User management
-Security policy management
-Audit logging
-Reporting system
-Security Monitoring
-Pattern-based detection
-Risk classification
-Incident tracking
-Threat analytics
-Security reporting
+* **Pre-Prompt Scanning** — Scans user-entered prompts before they are used with AI chatbots.
+* **Sensitive Data Detection** — Detects email addresses, phone numbers, API keys, IP addresses, and other predefined sensitive patterns.
+* **Rule-Based Detection** — Uses pattern matching and predefined security rules to identify sensitive information.
+* **Optional Data Masking** — Allows users to mask detected sensitive information before using the prompt.
+* **Sanitized Prompt** — Generates a cleaned version of the prompt that can be copied and used with an AI chatbot.
+* **Security Dashboard** — Provides centralized monitoring of detected sensitive-data incidents.
+* **VS Code Extension** — Enables prompt scanning directly within the developer workflow.
+* **REST API** — Connects the web application, VS Code extension, and detection engine.
+
+## How It Works
+
+```text
+User enters AI prompt
+        ↓
+SecurePrompt scans the input
+        ↓
+Pattern Matching + Security Rules
+        ↓
+Sensitive information detected?
+        ↓
+   ┌────┴────┐
+   No        Yes
+   ↓          ↓
+Prompt     Display detected
+ready      sensitive data
+              ↓
+        User chooses to mask
+              ↓
+       Sanitized prompt
+              ↓
+       Use with AI chatbot
+```
+
+## Example
+
+### Original Prompt
+
+```text
+Analyze this API configuration. My API key is sk-123456789
+and contact me at user@example.com.
+```
+
+### Detected Information
+
+```text
+API Key: sk-123456789
+Email: user@example.com
+```
+
+### Masked Prompt
+
+```text
+Analyze this API configuration. My API key is [MASKED]
+and contact me at [MASKED].
+```
+
+The user can then copy the sanitized prompt and use it with an AI chatbot.
+
+## Architecture
+
+```text
+                    ┌─────────────────────┐
+                    │      User Prompt    │
+                    └──────────┬──────────┘
+                               ↓
+              ┌────────────────────────────┐
+              │     React Web Application  │
+              └─────────────┬──────────────┘
+                            ↓
+                 ┌────────────────────┐
+                 │   Express REST API │
+                 └─────────┬──────────┘
+                           ↓
+                ┌─────────────────────┐
+                │   Detection Engine  │
+                │                     │
+                │  Pattern Matching   │
+                │  Security Rules     │
+                └─────────┬───────────┘
+                          ↓
+                ┌─────────────────────┐
+                │  Detection Result   │
+                └───────┬─────────────┘
+                        ↓
+              ┌──────────────────────┐
+              │   Optional Masking   │
+              └──────────┬───────────┘
+                         ↓
+              ┌──────────────────────┐
+              │   Sanitized Prompt   │
+              └──────────────────────┘
+
+        PostgreSQL ← Security Events / Incidents
+```
 
 ## Technology Stack
 
-### Frontend
-React.js
-HTML5
-CSS3
-JavaScript
+| Layer                 | Technology                        |
+| --------------------- | --------------------------------- |
+| Frontend              | React                             |
+| Backend               | Node.js, Express.js               |
+| Database              | PostgreSQL                        |
+| Detection             | Pattern Matching & Security Rules |
+| Developer Integration | VS Code Extension                 |
 
-### Backend
-Node.js
-Express.js
-Database
-MongoDB
+## Project Components
 
-### Extension Development
-VS Code Extension API
-TypeScript / JavaScript
-Additional Tools
-Git
-GitHub
-REST APIs
+### 1. Web Application
 
-## System Architecture
-Developer Code
-       │
-       ▼
-VS Code Extension
-       │
-Sensitive Data Detection
-       │
-       ▼
-Alert Generation
-       │
-       ▼
-Backend API
-       │
-       ▼
-MongoDB Database
-       │
-       ▼
-Web Dashboard
-       │
-       ▼
-Security Administrator
+The web application allows users to:
 
-## Installation
-Clone Repository
-git clone <repository-url>
-cd dlp-system
-Install Backend
-npm install
-Install Frontend
-cd frontend
-npm install
+* Enter prompts.
+* Scan prompts for sensitive information.
+* View detected sensitive data.
+* Mask detected information.
+* Generate a sanitized prompt.
+* Monitor security incidents through the dashboard.
 
+### 2. VS Code Extension
 
-## Configure Environment Variables
-PORT=5000
-MONGO_URI=your_database_url
-JWT_SECRET=your_secret_key
-Start Backend
-npm start
-Start Frontend
-npm run dev
-Run VS Code Extension
-npm install
-npm run compile
-F5
+The VS Code extension provides prompt-scanning capabilities directly within the VS Code environment, allowing developers to check for sensitive information before using prompts in AI-assisted development workflows.
 
-## Working
-Developer writes code in VS Code.
-Extension scans source files.
-Sensitive information patterns are detected.
-Warning notification is generated.
-Incident is logged in the backend.
-Dashboard displays detected incidents.
-Administrator reviews and manages alerts.
-Security Features
-Real-time monitoring
-Secret detection
-Risk categorization
-Incident logging
-Audit trail generation
-Centralized management
-Future Enhancements
-AI-powered leak detection
-Machine learning classification
-GitHub integration
-Email alerts
-Slack integration
-OCR-based document scanning
-Source code repository scanning
-Compliance reporting (GDPR, HIPAA)
+### 3. Detection Engine
 
-## Applications
-Software Development Teams
-Enterprises
-Educational Institutions
-Government Organizations
-Financial Institutions
-Healthcare Organizations
+The detection engine analyzes prompt content using predefined patterns and security rules.
 
-## Contributors
-Shreemathi
+Examples:
 
-## License
+```text
+Email Pattern     → user@example.com
+Phone Pattern     → +91 9876543210
+IP Pattern        → 192.168.1.10
+API Key Pattern   → sk-xxxxxxxxxxxx
+```
 
-This project is developed for educational, research, and cybersecurity awareness purposes.
+### 4. Security Dashboard
+
+The dashboard provides centralized visibility into:
+
+* Detected sensitive-data types
+* Number of security incidents
+* Masking activity
+* Prompt scanning events
+
+## API Flow
+
+```text
+React / VS Code Extension
+          ↓
+       REST API
+          ↓
+    Express.js Server
+          ↓
+    Detection Engine
+          ↓
+Detection + Masking Result
+          ↓
+React / VS Code Extension
+```
+
+## Database
+
+**PostgreSQL** is used to store relevant security-event information, enabling centralized monitoring and analysis through the dashboard.
+
+## Security Approach
+
+SecurePrompt follows a **rule-based security approach** rather than an AI-based detection approach. It uses predefined patterns and security rules to identify known sensitive-data formats.
+
+This approach provides:
+
+* Predictable detection
+* Explainable results
+* Fast processing
+* Customizable security rules
+
+## Future Enhancements
+
+* Add more sensitive-data detection rules.
+* Support additional AI coding and chat platforms.
+* Add configurable organization-specific security policies.
+* Add severity-based risk scoring.
+* Provide configurable blocking policies for high-risk data.
+* Add additional IDE integrations.
+
+## Tech Stack
+
+**React · Node.js · Express.js · PostgreSQL**
