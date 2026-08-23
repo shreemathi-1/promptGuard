@@ -31,7 +31,7 @@ export default function NavBar() {
 
   const dbStatus  = loading ? 'checking' : (health?.database ?? 'unreachable');
   const apiStatus = loading ? 'checking' : (health?.api     ?? 'unreachable');
-  const allOk     = dbStatus === 'ok' && apiStatus === 'ok';
+
 
   return (
     <nav style={{
@@ -77,34 +77,7 @@ export default function NavBar() {
         ))}
       </div>
 
-      {/* System status pill */}
-      <div style={{
-        display:      'flex',
-        alignItems:   'center',
-        gap:          8,
-        padding:      '4px 12px',
-        borderRadius: 20,
-        background:   'var(--color-bg)',
-        border:       '1px solid var(--color-border)',
-        fontSize:     12,
-      }}>
-        <span style={{
-          width:        7,
-          height:       7,
-          borderRadius: '50%',
-          background:   allOk
-            ? 'var(--color-success)'
-            : loading
-              ? 'var(--color-warning)'
-              : 'var(--color-danger)',
-          boxShadow: allOk
-            ? '0 0 5px var(--color-success)'
-            : 'none',
-        }} />
-        <span style={{ color: 'var(--color-text-dim)' }}>
-          {loading ? 'Checking…' : allOk ? 'All systems OK' : 'Service issue'}
-        </span>
-      </div>
+
     </nav>
   );
 }

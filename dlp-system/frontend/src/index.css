@@ -1,35 +1,52 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 :root {
-  --color-bg:          #0a0712;
-  --color-surface:     #141026;
-  --color-border:      #2a204d;
-  --color-primary:     #b066ff;
-  --color-primary-dim: #2c1254;
-  --color-success:     #10b981;
-  --color-warning:     #f59e0b;
-  --color-danger:      #ff4b82;
-  --color-muted:       #685f85;
-  --color-text:        #f4f0ff;
-  --color-text-dim:    #a299c2;
-  --radius:            8px;
-  --font-mono:         'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-  --font-sans:         -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Background */
+  --color-bg: #f3f1eb;
+  --color-surface: #ffffff;
+  --color-surface-alt: #ebe7df;
+
+  /* Border */
+  --color-border: #d6d1c8;
+
+  --color-primary: #2f180b;
+  --color-primary-dim: #e8e1da;
+
+  /* Status codes*/
+  --color-success: #287a3e;
+  --color-warning: #a66a00;
+  --color-danger: #b42318;
+
+  /* Text */
+  --color-text: #1f2326;
+  --color-text-dim: #454a4f;
+  --color-muted: #686d72;
+
+  /* Radius */
+  --radius: 8px;
+
+  /* Fonts */
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
 body {
-  background:  var(--color-bg);
-  color:       var(--color-text);
+  background: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
-  font-size:   14px;
+  font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -42,42 +59,44 @@ a {
 button {
   cursor: pointer;
   font-family: inherit;
-  font-size:   inherit;
+  font-size: inherit;
 }
 
-textarea, input, select {
+textarea,
+input,
+select {
   font-family: inherit;
-  font-size:   inherit;
+  font-size: inherit;
 }
 
 /* ── Utility classes ────────────────────────────────────────────── */
 
 .card {
-  background:    var(--color-surface);
-  border:        1px solid var(--color-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding:       24px;
+  padding: 24px;
 }
 
 .btn {
-  display:         inline-flex;
-  align-items:     center;
-  gap:             6px;
-  padding:         9px 18px;
-  border-radius:   var(--radius);
-  border:          1px solid transparent;
-  font-weight:     600;
-  transition:      background 0.15s, opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition: background 0.15s, opacity 0.15s;
 }
 
 .btn:disabled {
   opacity: 0.45;
-  cursor:  not-allowed;
+  cursor: not-allowed;
 }
 
 .btn-primary {
-  background:   var(--color-primary);
-  color:        #fff;
+  background: var(--color-primary);
+  color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -85,39 +104,62 @@ textarea, input, select {
 }
 
 .btn-ghost {
-  background:    transparent;
-  border-color:  var(--color-border);
-  color:         var(--color-text-dim);
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-dim);
 }
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--color-surface);
-  color:      var(--color-text);
+  color: var(--color-text);
 }
 
 .tag {
-  display:       inline-block;
-  padding:       2px 8px;
+  display: inline-block;
+  padding: 2px 8px;
   border-radius: 4px;
-  font-size:     11px;
-  font-weight:   700;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.tag-critical { background: #450a0a; color: #fca5a5; }
-.tag-high     { background: #431407; color: #fdba74; }
-.tag-medium   { background: #422006; color: #fcd34d; }
-.tag-low      { background: #052e16; color: #86efac; }
+.tag-critical {
+  background: #450a0a;
+  color: #fca5a5;
+}
+
+.tag-high {
+  background: #431407;
+  color: #fdba74;
+}
+
+.tag-medium {
+  background: #422006;
+  color: #fcd34d;
+}
+
+.tag-low {
+  background: #052e16;
+  color: #86efac;
+}
 
 .mono {
   font-family: var(--font-mono);
-  font-size:   13px;
+  font-size: 13px;
 }
 
-.text-muted  { color: var(--color-muted); }
-.text-dim    { color: var(--color-text-dim); }
-.text-danger { color: var(--color-danger); }
+.text-muted {
+  color: var(--color-text);
+}
+
+.text-dim {
+  color: var(--color-text-dim);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
 
 .divider {
   border: none;

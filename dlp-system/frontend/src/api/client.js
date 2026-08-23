@@ -98,8 +98,14 @@ export async function fetchRules(params = {}) {
   const clean = Object.fromEntries(
     Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
   );
-  const res = await http.get('/api/rules', { params: clean });
-  return res.data;
+  // Add cache‑busting timestamp to every request
+  const queryParams = { ...clean, _: Date.now() };
+  const res = await http.get('/api/rules', {
+    params: queryParams,
+    headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+  });
+  // `res` is the envelope { success, data } due to interceptor
+  return res?.data ?? { rules: [], total: 0 };
 }
 
 /**

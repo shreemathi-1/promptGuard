@@ -5,6 +5,68 @@
  */
 
 const BUILTIN_PATTERNS = [
+  // ── Aadhaar Numbers ────────────────────────────────────────────────────────
+  {
+    name: 'Aadhaar Number',
+    description: 'Indian Aadhaar number (12 digits, optional spaces or dashes)',
+    pattern: '\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b',
+    category: 'AADHAAR',
+    severity: 'HIGH',
+    is_builtin: true,
+  },
+  // ── PAN Numbers ────────────────────────────────────────────────────────────
+  {
+    name: 'PAN Number',
+    description: 'Indian PAN (10 characters: 5 letters, 4 digits, 1 letter)',
+    pattern: '\\b[A-Z]{5}[0-9]{4}[A-Z]\\b',
+    category: 'PAN',
+    severity: 'HIGH',
+    is_builtin: true,
+  },
+  // ── IFSC Codes ───────────────────────────────────────────────────────────────
+  {
+    name: 'IFSC Code',
+    description: 'Indian bank IFSC code (11 alphanumeric characters)',
+    pattern: '\\b[A-Z]{4}0[0-9A-Z]{6}\\b',
+    category: 'IFSC',
+    severity: 'HIGH',
+    is_builtin: true,
+  },
+  // ── Passport Numbers ────────────────────────────────────────────────────────
+  {
+    name: 'Passport Number',
+    description: 'Passport number (1-2 letters followed by 6-9 digits)',
+    pattern: '\\b[A-Z]{1,2}[0-9]{6,9}\\b',
+    category: 'PASSPORT',
+    severity: 'CRITICAL',
+    is_builtin: true,
+  },
+  // ── IP Addresses ────────────────────────────────────────────────────────
+  {
+    name: 'IPv4 Address',
+    description: 'Standard IPv4 address',
+    pattern: '\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b',
+    category: 'IP_ADDRESS',
+    severity: 'MEDIUM',
+    is_builtin: true,
+  },
+  {
+    name: 'IPv6 Address',
+    description: 'Standard IPv6 address',
+    pattern: '\\b(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}\\b',
+    category: 'IP_ADDRESS',
+    severity: 'MEDIUM',
+    is_builtin: true,
+  },
+  // ── MAC Addresses ────────────────────────────────────────────────────────
+  {
+    name: 'MAC Address',
+    description: 'MAC address (6 pairs of hex digits separated by : or -)',
+    pattern: '\\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\\b',
+    category: 'MAC_ADDRESS',
+    severity: 'MEDIUM',
+    is_builtin: true,
+  },
   // ── Credit Cards ──────────────────────────────────────────────────────────
   {
     name: 'Visa Card',

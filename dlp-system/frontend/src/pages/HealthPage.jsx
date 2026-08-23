@@ -68,14 +68,7 @@ export default function HealthPage() {
 
         <hr className="divider" />
 
-        <button
-          className="btn btn-ghost"
-          onClick={refresh}
-          disabled={loading}
-          style={{ fontSize: 13 }}
-        >
-          {loading ? 'Refreshing…' : '↻ Refresh now'}
-        </button>
+
       </div>
       <div style={{ marginTop: 24 }}>
   <RiskSummaryCard defaultDays={7} />

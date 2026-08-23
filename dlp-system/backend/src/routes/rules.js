@@ -10,6 +10,7 @@ const router = express.Router();
 const VALID_CATEGORIES = [
   'CREDIT_CARD', 'PHONE', 'SSN', 'BANK_ACCOUNT',
   'EMAIL', 'PASSPORT', 'API_KEY', 'CUSTOM',
+  'AADHAAR', 'PAN', 'IFSC', 'IP_ADDRESS', 'MAC_ADDRESS',
 ];
 
 const VALID_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];

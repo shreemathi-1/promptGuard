@@ -30,6 +30,11 @@ const CATEGORY_ICONS = {
   PASSPORT     : '🛂',
   API_KEY      : '🔑',
   CUSTOM       : '⚙️',
+  AADHAAR      : '🆔',
+  PAN          : '🧾',
+  IFSC         : '🏦',
+  IP_ADDRESS   : '🌐',
+  MAC_ADDRESS  : '📡',
 };
 
 // ── Toggle switch ─────────────────────────────────────────────────────────────
@@ -110,7 +115,7 @@ function RuleCard({ rule, onToggle, onEdit, onDelete, toggling, deleting }) {
             flexWrap   : 'wrap',
             marginBottom: 4,
           }}>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>{rule.name}</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>{rule.name || rule.category}</span>
             <SeverityTag severity={rule.severity} />
 
             {rule.isBuiltin && (
@@ -266,6 +271,7 @@ function RuleCard({ rule, onToggle, onEdit, onDelete, toggling, deleting }) {
 const CATEGORIES = [
   '', 'CREDIT_CARD', 'PHONE', 'SSN', 'BANK_ACCOUNT',
   'EMAIL', 'PASSPORT', 'API_KEY', 'CUSTOM',
+  'AADHAAR', 'PAN', 'IFSC', 'IP_ADDRESS', 'MAC_ADDRESS',
 ];
 
 const SEVERITIES = ['', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
@@ -406,16 +412,10 @@ export default function RulesPage() {
     setError(null);
     try {
       // Always fetch all rules; we filter client-side for search
-      const params = {};
-      if (filters.category)  params.category  = filters.category;
-      if (filters.severity)  params.severity  = filters.severity;
-      if (filters.isActive !== undefined && filters.isActive !== '')
-        params.isActive = filters.isActive;
-      if (filters.isBuiltin !== undefined && filters.isBuiltin !== '')
-        params.isBuiltin = filters.isBuiltin;
-
-      const data = await fetchRules(params);
+      // Always fetch all rules; client‑side filters handle everything
+      const data = await fetchRules();
       setAllRules(data.rules);
+      console.log('Fetched rules', data.rules?.length ?? 0);
     } catch (err) {
       setError(err.message);
       setAllRules([]);
@@ -430,13 +430,34 @@ export default function RulesPage() {
 
   // ── Client-side search filter ─────────────────────────────────────────────
 
-  const visibleRules = filters.search
-    ? allRules.filter(r =>
-        r.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        r.description?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        r.pattern.toLowerCase().includes(filters.search.toLowerCase())
-      )
-    : allRules;
+  const visibleRules = allRules.filter(r => {
+    // Search term filter
+    if (filters.search && filters.search.trim()) {
+      const term = filters.search.trim().toLowerCase();
+      const matchesSearch =
+        r.name?.toLowerCase().includes(term) ||
+        r.description?.toLowerCase().includes(term) ||
+        r.pattern?.toLowerCase().includes(term);
+      if (!matchesSearch) return false;
+    }
+    // Category filter
+    if (filters.category) {
+      if (r.category !== filters.category) return false;
+    }
+    // Severity filter
+    if (filters.severity) {
+      if (r.severity !== filters.severity) return false;
+    }
+    // Active status filter (boolean as string)
+    if (filters.isActive !== undefined && filters.isActive !== '') {
+      if (String(r.isActive) !== filters.isActive) return false;
+    }
+    // Built-in filter (boolean as string)
+    if (filters.isBuiltin !== undefined && filters.isBuiltin !== '') {
+      if (String(r.isBuiltin) !== filters.isBuiltin) return false;
+    }
+    return true;
+  });
 
   // ── Split builtin vs custom ───────────────────────────────────────────────
 
