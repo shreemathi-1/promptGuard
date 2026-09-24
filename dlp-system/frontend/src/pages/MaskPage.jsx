@@ -316,7 +316,6 @@ export default function MaskPage() {
     <div>
       <PageHeader
         title="Mask"
-        subtitle="Detect and redact sensitive data. Choose a masking style, then press Ctrl+Enter."
       />
 
       {/* ── Example buttons ── */}

@@ -134,7 +134,7 @@ const [scoreResult, setScoreResult] = useState(null);
     <div>
       <PageHeader
         title="Scan"
-        subtitle="Paste any text below to detect sensitive data. Ctrl+Enter to run."
+        
       />
 
       {/* ── Example buttons ── */}
