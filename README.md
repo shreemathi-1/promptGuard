@@ -194,6 +194,59 @@ This approach provides:
 * Provide configurable blocking policies for high-risk data.
 * Add additional IDE integrations.
 
+## Project Structure
+
+```text
+promptGuard/
+├── apps/
+│   ├── backend/      # Express REST API, detection engine, PostgreSQL access
+│   └── frontend/     # React (Vite) web application
+├── docs/             # Documentation PDF and screenshots
+├── docker-compose.yml
+└── .env.example
+```
+
+## Getting Started
+
+### Option 1: Docker (recommended)
+
+```bash
+cp .env.example .env          # optional: change the database password
+docker compose up --build
+```
+
+| Service    | URL                              |
+| ---------- | -------------------------------- |
+| Web app    | http://localhost:5173            |
+| API health | http://localhost:4000/api/health |
+| PostgreSQL | localhost:5432                   |
+
+The database schema is created on first start and the built-in rules are seeded automatically.
+To reset the database, run `docker compose down -v`.
+
+### Option 2: Run locally
+
+Requires Node.js 20.19+ and PostgreSQL 14+.
+
+```bash
+# 1. Database
+createdb dlp_db
+psql -d dlp_db -f apps/backend/src/db/schema.sql
+
+# 2. Backend
+cd apps/backend
+cp .env.example .env          # fill in your DB credentials
+npm install
+node src/patterns/seedPatterns.js
+npm run dev
+
+# 3. Frontend (new terminal)
+cd apps/frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
 ## Tech Stack
 
 **React · Node.js · Express.js · PostgreSQL**

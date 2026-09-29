@@ -1,0 +1,15 @@
+{
+  "name": "promptguard",
+  "private": true,
+  "description": "PromptGuard: detect and mask sensitive data in prompts before they reach an AI chatbot",
+  "scripts": {
+    "install:all": "npm --prefix apps/backend install && npm --prefix apps/frontend install",
+    "dev:backend": "npm --prefix apps/backend run dev",
+    "dev:frontend": "npm --prefix apps/frontend run dev",
+    "seed": "cd apps/backend && node src/patterns/seedPatterns.js",
+    "build:frontend": "npm --prefix apps/frontend run build",
+    "lint:frontend": "npm --prefix apps/frontend run lint",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  }
+}
