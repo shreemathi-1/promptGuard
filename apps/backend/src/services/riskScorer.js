@@ -15,6 +15,13 @@
  *      CREDIT_CARD, BANK_ACCOUNT  → ×1.3
  *      API_KEY                    → ×1.2
  *      PHONE, EMAIL, CUSTOM       → ×1.0
+ *      MEDICAL                    → ×1.5   (AI-detected)
+ *      DATE_OF_BIRTH              → ×1.2   (AI-detected)
+ *      PERSON                     → ×1.0   (AI-detected)
+ *      LOCATION, ORGANIZATION     → ×0.8   (AI-detected)
+ *
+ *    Each detection's weight is scaled by its confidence (0–1) when it has
+ *    one; regex-only detections count in full.
  *
  * 3. COUNT ESCALATION
  *    Multiple detections of the same category signal a systemic leak:
@@ -23,7 +30,11 @@
  *      4–6 detections           → ×1.4
  *      7+ detections            → ×1.6
  *
- * Final score = min(sum of adjusted weights, 100)
+ * 4. PROMPT INJECTION
+ *    An injection probability ≥ 0.5 adds up to 40 points; above 0.9 the
+ *    score is raised to at least 80 (CRITICAL).
+ *
+ * Final score = min(sum of adjusted weights + injection points, 100)
  *
  * Additionally produces a breakdown object for UI visualisation.
  */
@@ -46,7 +57,27 @@ const CATEGORY_MULTIPLIER = {
   PHONE        : 1.0,
   EMAIL        : 1.0,
   CUSTOM       : 1.0,
+  MEDICAL      : 1.5,
+  DATE_OF_BIRTH: 1.2,
+  PERSON       : 1.0,
+  LOCATION     : 0.8,
+  ORGANIZATION : 0.8,
 };
+
+const INJECTION_MIN_SCORE      = 0.5;
+const INJECTION_MAX_POINTS     = 40;
+const INJECTION_CRITICAL_SCORE = 0.9;
+const CRITICAL_FLOOR           = 80;
+
+function getInjectionPoints(injectionScore) {
+  if (typeof injectionScore !== 'number' || injectionScore < INJECTION_MIN_SCORE) return 0;
+  return Math.round(INJECTION_MAX_POINTS * injectionScore);
+}
+
+function detectionWeight(d) {
+  const confidence = typeof d.confidence === 'number' ? d.confidence : 1;
+  return (SEVERITY_BASE[d.severity] ?? 5) * confidence;
+}
 
 function getCountMultiplier(count) {
   if (count >= 7) return 1.6;
@@ -75,6 +106,7 @@ function getRiskLevel(score) {
  * Calculates a risk score and full breakdown from a detections array.
  *
  * @param {Detection[]} detections
+ * @param {{ injectionScore?: number|null }} [options]  prompt-injection probability (0–1)
  * @returns {ScoreResult}
  *
  * ScoreResult shape:
@@ -86,6 +118,7 @@ function getRiskLevel(score) {
  *     byCategory: CategoryBreakdown[],
  *     bySeverity: SeverityBreakdown[],
  *     totalDetections: number,
+ *     injection: { score: number, points: number } | null,
  *   }
  * }
  *
@@ -105,8 +138,15 @@ function getRiskLevel(score) {
  *   basePoints: number,
  * }
  */
-function calculateRiskScore(detections) {
-  if (!Array.isArray(detections) || detections.length === 0) {
+function calculateRiskScore(detections, { injectionScore = null } = {}) {
+  const injectionPoints = getInjectionPoints(injectionScore);
+  const injection = typeof injectionScore === 'number'
+    ? { score: injectionScore, points: injectionPoints }
+    : null;
+
+  if (!Array.isArray(detections)) detections = [];
+
+  if (detections.length === 0 && injectionPoints === 0) {
     return {
       score     : 0,
       level     : 'NONE',
@@ -115,6 +155,7 @@ function calculateRiskScore(detections) {
         byCategory      : [],
         bySeverity      : [],
         totalDetections : 0,
+        injection,
       },
     };
   }
@@ -151,11 +192,8 @@ function calculateRiskScore(detections) {
     const catMultiplier   = CATEGORY_MULTIPLIER[category] ?? 1.0;
     const countMultiplier = getCountMultiplier(group.count);
 
-    // Sum base severity weights for this category's detections
-    const baseSum = group.detections.reduce(
-      (sum, d) => sum + (SEVERITY_BASE[d.severity] ?? 5),
-      0
-    );
+    // Sum severity weights (scaled by confidence) for this category's detections
+    const baseSum = group.detections.reduce((sum, d) => sum + detectionWeight(d), 0);
 
     const contribution = baseSum * catMultiplier * countMultiplier;
 
@@ -191,7 +229,11 @@ function calculateRiskScore(detections) {
     );
 
   // ── Final score ───────────────────────────────────────────────────────────
-  const score    = Math.min(Math.round(rawTotal), 100);
+  let score = Math.min(Math.round(rawTotal + injectionPoints), 100);
+  if (typeof injectionScore === 'number' && injectionScore > INJECTION_CRITICAL_SCORE) {
+    score = Math.max(score, CRITICAL_FLOOR);
+  }
+
   const level    = getRiskLevel(score);
 
   return {
@@ -202,6 +244,7 @@ function calculateRiskScore(detections) {
       byCategory,
       bySeverity,
       totalDetections : detections.length,
+      injection,
     },
   };
 }

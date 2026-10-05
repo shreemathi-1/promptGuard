@@ -199,8 +199,9 @@ This approach provides:
 ```text
 promptGuard/
 ├── apps/
-│   ├── backend/      # Express REST API, detection engine, PostgreSQL access
-│   └── frontend/     # React (Vite) web application
+│   ├── backend/      # Express REST API, detection pipeline, PostgreSQL access
+│   ├── frontend/     # React (Vite) web application
+│   └── ml-service/   # Python FastAPI service: Presidio + HuggingFace NER, validators, injection classifier
 ├── docs/             # Documentation PDF and screenshots
 ├── docker-compose.yml
 └── .env.example
@@ -219,14 +220,16 @@ docker compose up --build
 | ---------- | -------------------------------- |
 | Web app    | http://localhost:5173            |
 | API health | http://localhost:4000/api/health |
+| ML health  | http://localhost:8000/health     |
 | PostgreSQL | localhost:5432                   |
 
-The database schema is created on first start and the built-in rules are seeded automatically.
+The database schema is created on first start; migrations and built-in rules are applied automatically.
+The ML image downloads its models at build time (~2 GB). While the models load, scans run regex-only.
 To reset the database, run `docker compose down -v`.
 
 ### Option 2: Run locally
 
-Requires Node.js 20.19+ and PostgreSQL 14+.
+Requires Node.js 20.19+, PostgreSQL 14+ and Python 3.11 (for the optional ML service).
 
 ```bash
 # 1. Database
@@ -237,10 +240,18 @@ psql -d dlp_db -f apps/backend/src/db/schema.sql
 cd apps/backend
 cp .env.example .env          # fill in your DB credentials
 npm install
+npm run migrate
 node src/patterns/seedPatterns.js
 npm run dev
 
-# 3. Frontend (new terminal)
+# 3. ML service (optional, new terminal; without it scans are regex-only)
+cd apps/ml-service
+python3.11 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m spacy download en_core_web_sm
+.venv/bin/uvicorn app.main:app --port 8000   # first start downloads the HuggingFace models
+
+# 4. Frontend (new terminal)
 cd apps/frontend
 cp .env.example .env
 npm install
@@ -249,4 +260,4 @@ npm run dev
 
 ## Tech Stack
 
-**React · Node.js · Express.js · PostgreSQL**
+**React · Node.js · Express.js · PostgreSQL · Python · FastAPI · Microsoft Presidio · HuggingFace Transformers**

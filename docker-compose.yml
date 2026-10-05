@@ -17,6 +17,16 @@ services:
       timeout: 3s
       retries: 10
 
+  ml-service:
+    build: ./apps/ml-service
+    environment:
+      SPACY_MODEL: en_core_web_sm
+      NER_MODEL: dslim/bert-base-NER
+      ENABLE_INJECTION_MODEL: "true"
+    ports:
+      - "8000:8000"
+    # Healthcheck is defined in the Dockerfile (models take ~30–60s to load)
+
   backend:
     build: ./apps/backend
     environment:
@@ -28,11 +38,15 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       CORS_ORIGINS: http://localhost:5173
+      ML_SERVICE_URL: http://ml-service:8000
     ports:
       - "4000:4000"
     depends_on:
       postgres:
         condition: service_healthy
+      # Not service_healthy: the API serves regex-only scans while models load
+      ml-service:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/health || exit 1"]
       interval: 10s

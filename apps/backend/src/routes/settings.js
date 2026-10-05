@@ -24,6 +24,25 @@ const SETTINGS_REGISTRY = {
     allowedValues: ['true', 'false'],
     type         : 'boolean',
   },
+  detection_mode: {
+    description  : 'Detection engine: REGEX (rules only), AI (ML only) or HYBRID (rules verified by ML, plus AI entities)',
+    allowedValues: ['REGEX', 'AI', 'HYBRID'],
+    type         : 'enum',
+  },
+  ai_confidence_threshold: {
+    description  : 'Minimum confidence (0–1) for a detection to be reported',
+    allowedValues: null,
+    type         : 'number',
+    validate     : (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 && n <= 1 ? null : 'must be a number between 0 and 1';
+    },
+  },
+  injection_check: {
+    description  : 'When true, prompts are checked for prompt injection',
+    allowedValues: ['true', 'false'],
+    type         : 'boolean',
+  },
 };
 
 const ALLOWED_KEYS = Object.keys(SETTINGS_REGISTRY);
@@ -183,6 +202,14 @@ router.put('/:key', async (req, res, next) => {
       });
     }
 
+    const customError = meta.validate?.(trimmed);
+    if (customError) {
+      return res.status(400).json({
+        success : false,
+        error   : `Invalid value "${trimmed}" for setting "${key}": ${customError}`,
+      });
+    }
+
     // ── Upsert ──────────────────────────────────────────────────────────────
     const result = await query(
       `INSERT INTO settings (key, value, description)
@@ -272,6 +299,12 @@ router.put('/', async (req, res, next) => {
           key,
           error: `Invalid value "${trimmed}". Allowed: ${meta.allowedValues.join(', ')}`,
         });
+        continue;
+      }
+
+      const customError = meta.validate?.(trimmed);
+      if (customError) {
+        errors.push({ key, error: `Invalid value "${trimmed}": ${customError}` });
         continue;
       }
 

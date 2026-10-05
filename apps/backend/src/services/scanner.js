@@ -81,17 +81,20 @@ const SEVERITY_RANK = {
 
 /**
  * Deduplicates overlapping matches.
- * If two matches overlap in position, keeps the higher-severity one.
+ * If two matches overlap in position, keeps the higher-severity one
+ * (ties go to the higher confidence, when detections carry one).
  * @param {Array} matches - Raw match array
  * @returns {Array} - Deduplicated matches
  */
 function deduplicateMatches(matches) {
   if (matches.length === 0) return [];
 
-  // Sort by start index, then by severity descending
+  // Sort by start index, then by severity descending, then by confidence descending
   const sorted = [...matches].sort((a, b) => {
     if (a.start !== b.start) return a.start - b.start;
-    return (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0);
+    const rankDiff = (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0);
+    if (rankDiff !== 0) return rankDiff;
+    return (b.confidence ?? 0) - (a.confidence ?? 0);
   });
 
   const deduped = [];
@@ -152,8 +155,29 @@ async function scan(text) {
   }
 
   const startTime = Date.now();
+  const { matches, patternCount } = await findMatches(text);
+  const detections = sortDetections(deduplicateMatches(matches));
+
+  return {
+    detections,
+    detectionCount: detections.length,
+    scannedAt: new Date().toISOString(),
+    patternCount,
+    durationMs: Date.now() - startTime,
+  };
+}
+
+/**
+ * Runs every active pattern and returns all matches, before deduplication.
+ * The detection pipeline scores these individually, so an overlapping hit
+ * survives when the one that would have hidden it turns out to be a false positive.
+ *
+ * @param {string} text
+ * @returns {Promise<{ matches: Detection[], patternCount: number }>}
+ */
+async function findMatches(text) {
   const patterns = await loadPatterns();
-  const rawMatches = [];
+  const matches = [];
 
   for (const p of patterns) {
     if (!p.regex) continue; // skip patterns that failed to compile
@@ -165,7 +189,7 @@ async function scan(text) {
     while ((match = p.regex.exec(text)) !== null) {
       const matchedValue = match[0];
 
-      rawMatches.push({
+      matches.push({
         patternId: p.id,
         patternName: p.name,
         category: p.category,
@@ -186,22 +210,25 @@ async function scan(text) {
     p.regex.lastIndex = 0;
   }
 
-  const detections = deduplicateMatches(rawMatches);
+  return { matches, patternCount: patterns.length };
+}
 
-  // Sort final result: severity DESC, then position ASC
-  detections.sort((a, b) => {
+/**
+ * Final result order: severity DESC, then position ASC.
+ */
+function sortDetections(detections) {
+  return detections.sort((a, b) => {
     const rankDiff =
       (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0);
     return rankDiff !== 0 ? rankDiff : a.start - b.start;
   });
-
-  return {
-    detections,
-    detectionCount: detections.length,
-    scannedAt: new Date().toISOString(),
-    patternCount: patterns.length,
-    durationMs: Date.now() - startTime,
-  };
 }
 
-module.exports = { scan, loadPatterns, reloadPatterns };
+module.exports = {
+  scan,
+  findMatches,
+  deduplicateMatches,
+  sortDetections,
+  loadPatterns,
+  reloadPatterns,
+};

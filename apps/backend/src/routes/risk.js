@@ -218,7 +218,7 @@ router.get('/summary', async (req, res, next) => {
  * Score a detections array on demand without creating an audit log.
  * Useful for the frontend to preview risk before committing.
  *
- * Body: { detections: Detection[] }
+ * Body: { detections: Detection[], injectionScore?: number (0–1) }
  *
  * Response:
  * {
@@ -227,7 +227,7 @@ router.get('/summary', async (req, res, next) => {
  * }
  */
 router.post('/score', (req, res) => {
-  const { detections } = req.body;
+  const { detections, injectionScore = null } = req.body;
 
   if (!Array.isArray(detections)) {
     return res.status(400).json({
@@ -236,7 +236,14 @@ router.post('/score', (req, res) => {
     });
   }
 
-  const result = calculateRiskScore(detections);
+  if (injectionScore !== null && (typeof injectionScore !== 'number' || injectionScore < 0 || injectionScore > 1)) {
+    return res.status(400).json({
+      success : false,
+      error   : '"injectionScore" must be a number between 0 and 1',
+    });
+  }
+
+  const result = calculateRiskScore(detections, { injectionScore });
 
   return res.status(200).json({
     success : true,

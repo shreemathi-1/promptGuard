@@ -1,5 +1,5 @@
 const express = require('express');
-const { scan } = require('../services/scanner');
+const { runDetection, DETECTION_MODES } = require('../services/detectionPipeline');
 const { validate } = require('../middleware/validate');
 const { writeAuditLog, extractIp } = require('../services/auditLogger');
 
@@ -13,12 +13,13 @@ const MAX_INPUT_LENGTH = 50_000;
  * Body:
  * {
  *   text: string
+ *   mode: 'REGEX' | 'AI' | 'HYBRID'  (optional, default: detection_mode setting)
  * }
  */
 router.post(
   '/',
   validate((req) => {
-    const { text } = req.body;
+    const { text, mode } = req.body;
 
     if (text === undefined || text === null) {
       return '"text" field is required';
@@ -32,12 +33,15 @@ router.post(
     if (text.length > MAX_INPUT_LENGTH) {
       return `"text" exceeds maximum length of ${MAX_INPUT_LENGTH} characters`;
     }
+    if (mode !== undefined && !DETECTION_MODES.includes(mode)) {
+      return `"mode" must be one of: ${DETECTION_MODES.join(', ')}`;
+    }
   }),
   async (req, res, next) => {
     try {
-      const { text } = req.body;
+      const { text, mode } = req.body;
 
-      const result = await scan(text);
+      const result = await runDetection(text, { mode });
 
       // ── Audit log (non-blocking) ────────────────────────────────────────
       writeAuditLog({
@@ -47,6 +51,9 @@ router.post(
         maskStyle  : null,
         sourceIp   : extractIp(req),
         userAgent  : req.headers['user-agent'] || null,
+        detectionMode    : result.effectiveMode,
+        injectionScore   : result.injection?.score ?? null,
+        aiDetectionCount : result.aiDetectionCount,
       }).catch((err) => {
         console.error('[AuditLogger] Failed to write scan log:', err.message);
       });

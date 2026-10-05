@@ -8,5 +8,5 @@ RUN npm ci --omit=dev
 COPY src ./src
 
 EXPOSE 4000
-# Seeding is idempotent (skips existing patterns), so it is safe on every start.
-CMD ["sh", "-c", "node src/patterns/seedPatterns.js && node src/app.js"]
+# Migrations and seeding are idempotent, so they are safe on every start.
+CMD ["sh", "-c", "node src/db/migrate.js && node src/patterns/seedPatterns.js && node src/app.js"]

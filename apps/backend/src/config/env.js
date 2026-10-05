@@ -7,6 +7,11 @@ const env = {
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean),
+  ml: {
+    // Empty string disables the ML service (regex-only detection)
+    url: process.env.ML_SERVICE_URL ?? 'http://localhost:8000',
+    timeoutMs: parseInt(process.env.ML_TIMEOUT_MS, 10) || 5000,
+  },
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT, 10) || 5432,
