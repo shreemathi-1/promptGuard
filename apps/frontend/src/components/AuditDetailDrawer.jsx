@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import RiskScore    from './RiskScore';
 import SeverityTag  from './SeverityTag';
+import { categoryIcon } from '../constants/categories';
 
 /**
  * Slide-in drawer that shows the full detail of one audit log record.
@@ -9,17 +10,6 @@ import SeverityTag  from './SeverityTag';
  *   record   — AuditRecord | null
  *   onClose  — () => void
  */
-
-const CATEGORY_ICONS = {
-  CREDIT_CARD  : '💳',
-  SSN          : '🪪',
-  PHONE        : '📞',
-  EMAIL        : '📧',
-  BANK_ACCOUNT : '🏦',
-  PASSPORT     : '🛂',
-  API_KEY      : '🔑',
-  CUSTOM       : '⚙️',
-};
 
 function Field({ label, children }) {
   return (
@@ -241,7 +231,7 @@ export default function AuditDetailDrawer({ record, onClose }) {
                     flexWrap     : 'wrap',
                   }}>
                     <span style={{ fontSize: 15 }}>
-                      {CATEGORY_ICONS[d.category] ?? '🔍'}
+                      {categoryIcon(d.category)}
                     </span>
                     <span style={{ fontWeight: 600, fontSize: 13, flex: 1 }}>
                       {d.patternName}

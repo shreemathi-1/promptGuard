@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchRiskSummary }    from '../api/client';
 import RiskScore               from './RiskScore';
+import { categoryIcon }        from '../constants/categories';
 
 /**
  * Standalone card that fetches and displays aggregate risk analytics.
@@ -15,17 +16,6 @@ const WINDOW_OPTIONS = [
   { value: 7,  label: '7 days' },
   { value: 30, label: '30 days'},
 ];
-
-const CATEGORY_ICONS = {
-  CREDIT_CARD  : '💳',
-  SSN          : '🪪',
-  PHONE        : '📞',
-  EMAIL        : '📧',
-  BANK_ACCOUNT : '🏦',
-  PASSPORT     : '🛂',
-  API_KEY      : '🔑',
-  CUSTOM       : '⚙️',
-};
 
 const RISK_LEVEL_COLORS = {
   CRITICAL : 'var(--color-danger)',
@@ -249,6 +239,9 @@ export default function RiskSummaryCard({ defaultDays = 7 }) {
               { label: 'Detections', value: summary.totals.detections, color: '#f97316'              },
               { label: 'Mask Ops',   value: summary.totals.maskedOps,  color: 'var(--color-text-dim)'},
               { label: 'Avg Risk',   value: summary.averageRisk,       color: summary.averageRisk >= 50 ? 'var(--color-danger)' : summary.averageRisk >= 20 ? 'var(--color-warning)' : 'var(--color-success)' },
+              { label: 'Rule-based', value: summary.totals.regexDetections ?? 0,   color: 'var(--color-text-dim)' },
+              { label: 'AI Found',   value: summary.totals.aiDetections ?? 0,      color: '#1d4ed8' },
+              { label: 'Injections', value: summary.totals.injectionAttempts ?? 0, color: summary.totals.injectionAttempts > 0 ? 'var(--color-danger)' : 'var(--color-success)' },
             ].map(s => (
               <div key={s.label} style={{
                 background   : 'var(--color-bg)',
@@ -303,7 +296,7 @@ export default function RiskSummaryCard({ defaultDays = 7 }) {
                     gap            : 8,
                   }}>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>
-                      {CATEGORY_ICONS[cat.category] ?? '🔍'}
+                      {categoryIcon(cat.category)}
                     </span>
                     <span style={{ fontSize: 12, flex: 1 }}>{cat.category}</span>
                     {/* Bar */}

@@ -1,6 +1,6 @@
 const express = require('express');
 const { query }              = require('../config/db');
-const { calculateRiskScore } = require('../services/riskScorer');
+const { calculateRiskScore, INJECTION_MIN_SCORE } = require('../services/riskScorer');
 
 const router = express.Router();
 
@@ -17,7 +17,8 @@ const router = express.Router();
  *   success: true,
  *   data: {
  *     window:          { days, from, to },
- *     totals:          { scans, detections, maskedOps },
+ *     totals:          { scans, detections, maskedOps, maxRisk,
+ *                        aiDetections, regexDetections, injectionAttempts },
  *     averageRisk:     number,
  *     riskDistribution: { CRITICAL, HIGH, MEDIUM, LOW, NONE },
  *     topCategories:   { category, count, percentage }[],
@@ -47,10 +48,12 @@ router.get('/summary', async (req, res, next) => {
          COALESCE(SUM(detection_count), 0)              AS total_detections,
          COUNT(*) FILTER (WHERE mask_style IS NOT NULL) AS masked_ops,
          COALESCE(AVG(risk_score), 0)                   AS avg_risk,
-         COALESCE(MAX(risk_score), 0)                   AS max_risk
+         COALESCE(MAX(risk_score), 0)                   AS max_risk,
+         COALESCE(SUM(ai_detection_count), 0)           AS ai_detections,
+         COUNT(*) FILTER (WHERE injection_score >= $2)  AS injection_attempts
        FROM audit_logs
        WHERE created_at >= $1`,
-      [fromISO]
+      [fromISO, INJECTION_MIN_SCORE]
     );
 
     const totals      = totalsResult.rows[0];
@@ -198,6 +201,9 @@ router.get('/summary', async (req, res, next) => {
           detections : parseInt(totals.total_detections, 10),
           maskedOps  : parseInt(totals.masked_ops, 10),
           maxRisk    : parseInt(totals.max_risk, 10),
+          aiDetections      : parseInt(totals.ai_detections, 10),
+          regexDetections   : parseInt(totals.total_detections, 10) - parseInt(totals.ai_detections, 10),
+          injectionAttempts : parseInt(totals.injection_attempts, 10),
         },
         averageRisk      : avgRisk,
         riskDistribution,

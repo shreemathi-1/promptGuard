@@ -177,6 +177,8 @@ function mask(text, detections, style = DEFAULT_STYLE) {
       severity,
       start,
       end,
+      source     : detection.source ?? null,
+      confidence : detection.confidence ?? null,
     });
   }
 

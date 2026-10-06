@@ -9,6 +9,7 @@ import {
 import PageHeader    from '../components/PageHeader';
 import SeverityTag   from '../components/SeverityTag';
 import RuleFormModal from '../components/RuleFormModal';
+import { categoryIcon } from '../constants/categories';
 
 // ── Severity colours for the rule card border ─────────────────────────────────
 
@@ -20,22 +21,6 @@ const SEVERITY_BORDER = {
 };
 
 // ── Category icon map ─────────────────────────────────────────────────────────
-
-const CATEGORY_ICONS = {
-  CREDIT_CARD  : '💳',
-  SSN          : '🪪',
-  PHONE        : '📞',
-  EMAIL        : '📧',
-  BANK_ACCOUNT : '🏦',
-  PASSPORT     : '🛂',
-  API_KEY      : '🔑',
-  CUSTOM       : '⚙️',
-  AADHAAR      : '🆔',
-  PAN          : '🧾',
-  IFSC         : '🏦',
-  IP_ADDRESS   : '🌐',
-  MAC_ADDRESS  : '📡',
-};
 
 // ── Toggle switch ─────────────────────────────────────────────────────────────
 
@@ -103,7 +88,7 @@ function RuleCard({ rule, onToggle, onEdit, onDelete, toggling, deleting }) {
       }}>
         {/* Icon */}
         <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>
-          {CATEGORY_ICONS[rule.category] ?? '🔍'}
+          {categoryIcon(rule.category)}
         </span>
 
         {/* Name + tags */}

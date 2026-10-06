@@ -249,4 +249,4 @@ function calculateRiskScore(detections, { injectionScore = null } = {}) {
   };
 }
 
-module.exports = { calculateRiskScore, getRiskLevel, RISK_LEVELS };
+module.exports = { calculateRiskScore, getRiskLevel, RISK_LEVELS, INJECTION_MIN_SCORE };

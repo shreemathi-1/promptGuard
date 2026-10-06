@@ -31,10 +31,11 @@ export async function fetchHealth() {
 
 /**
  * @param {string} text
+ * @param {'REGEX'|'AI'|'HYBRID'} [mode] — omit to use the detection_mode setting
  * @returns {Promise<ScanResult>}
  */
-export async function scanText(text) {
-  const res = await http.post('/api/scan', { text });
+export async function scanText(text, mode) {
+  const res = await http.post('/api/scan', { text, mode });
   return res.data;
 }
 
@@ -43,10 +44,11 @@ export async function scanText(text) {
 /**
  * @param {string} text
  * @param {'REDACT'|'PARTIAL'|'TOKENIZE'} style
+ * @param {'REGEX'|'AI'|'HYBRID'} [mode] — omit to use the detection_mode setting
  * @returns {Promise<MaskResult>}
  */
-export async function maskText(text, style = 'REDACT') {
-  const res = await http.post('/api/mask', { text, style });
+export async function maskText(text, style = 'REDACT', mode) {
+  const res = await http.post('/api/mask', { text, style, mode });
   return res.data;
 }
 
@@ -163,10 +165,11 @@ export async function fetchRiskSummary(days = 7) {
 /**
  * Score a detections array on demand.
  * @param {Detection[]} detections
+ * @param {number|null} [injectionScore] — prompt-injection probability (0–1)
  * @returns {Promise<ScoreResult>}
  */
-export async function scoreDetections(detections) {
-  const res = await http.post('/api/risk/score', { detections });
+export async function scoreDetections(detections, injectionScore = null) {
+  const res = await http.post('/api/risk/score', { detections, injectionScore });
   return res.data;
 }
 

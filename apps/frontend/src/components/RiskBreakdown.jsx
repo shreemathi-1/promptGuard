@@ -1,4 +1,5 @@
 import SeverityTag from './SeverityTag';
+import { categoryIcon } from '../constants/categories';
 
 /**
  * Visual breakdown of a ScoreResult from the risk scorer.
@@ -7,17 +8,6 @@ import SeverityTag from './SeverityTag';
  *   scoreResult — { score, level, color, breakdown }
  *   compact     — bool (default false) — smaller layout for inline use
  */
-
-const CATEGORY_ICONS = {
-  CREDIT_CARD  : '💳',
-  SSN          : '🪪',
-  PHONE        : '📞',
-  EMAIL        : '📧',
-  BANK_ACCOUNT : '🏦',
-  PASSPORT     : '🛂',
-  API_KEY      : '🔑',
-  CUSTOM       : '⚙️',
-};
 
 const SEVERITY_COLORS = {
   CRITICAL : 'var(--color-danger)',
@@ -97,7 +87,7 @@ function CategoryRow({ item, maxContribution }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
       {/* Icon + name */}
       <span style={{ fontSize: 14, flexShrink: 0 }}>
-        {CATEGORY_ICONS[item.category] ?? '🔍'}
+        {categoryIcon(item.category)}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
@@ -166,7 +156,7 @@ export default function RiskBreakdown({ scoreResult, compact = false }) {
   if (!scoreResult) return null;
 
   const { score, level, color, breakdown } = scoreResult;
-  const { byCategory, bySeverity, totalDetections } = breakdown;
+  const { byCategory, bySeverity, totalDetections, injection } = breakdown;
 
   const maxContribution = byCategory.length > 0
     ? byCategory[0].contribution   // already sorted desc
@@ -205,7 +195,7 @@ export default function RiskBreakdown({ scoreResult, compact = false }) {
                 padding      : '2px 7px',
                 color        : 'var(--color-text-dim)',
               }}>
-                {CATEGORY_ICONS[item.category] ?? '🔍'} {item.category} ×{item.count}
+                {categoryIcon(item.category)} {item.category} ×{item.count}
               </span>
             ))}
             {byCategory.length > 4 && (
@@ -267,6 +257,28 @@ export default function RiskBreakdown({ scoreResult, compact = false }) {
               maxContribution={maxContribution}
             />
           ))}
+        </div>
+      )}
+
+      {/* Prompt-injection contribution */}
+      {injection?.points > 0 && (
+        <div style={{
+          display        : 'flex',
+          justifyContent : 'space-between',
+          alignItems     : 'center',
+          padding        : '8px 12px',
+          marginBottom   : 16,
+          background     : '#fdecea',
+          border         : '1px solid var(--color-danger)',
+          borderRadius   : 6,
+          fontSize       : 12,
+        }}>
+          <span style={{ fontWeight: 700, color: 'var(--color-danger)' }}>
+            🛑 Prompt injection ({Math.round(injection.score * 100)}%)
+          </span>
+          <span style={{ fontWeight: 700, color: 'var(--color-danger)', fontFamily: 'var(--font-mono)' }}>
+            +{injection.points}
+          </span>
         </div>
       )}
 

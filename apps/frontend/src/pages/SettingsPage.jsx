@@ -83,6 +83,75 @@ const SETTING_META = {
       },
     ],
   },
+  detection_mode: {
+    label   : 'Detection Mode',
+    icon    : '🧠',
+    hint    : 'Default engine for API clients (CLI, VS Code extension) that do not pick a mode.',
+    options : [
+      {
+        value       : 'REGEX',
+        label       : 'Regex',
+        description : 'Pattern rules only — fastest, no ML service needed',
+        example     : 'Card numbers, keys, emails…',
+      },
+      {
+        value       : 'AI',
+        label       : 'AI',
+        description : 'Local ML models only (Presidio + HuggingFace NER)',
+        example     : 'Names, places, organisations, IDs',
+      },
+      {
+        value       : 'HYBRID',
+        label       : 'Hybrid (default)',
+        description : 'Regex hits verified by checksums and context, plus AI entities',
+        example     : 'Fewer false positives, more coverage',
+      },
+    ],
+  },
+  ai_confidence_threshold: {
+    label   : 'AI Confidence Threshold',
+    icon    : '📏',
+    hint    : 'Detections scored below this confidence are dropped in AI and Hybrid modes.',
+    options : [
+      {
+        value       : '0.4',
+        label       : 'Lenient (0.4)',
+        description : 'Report more possible matches; expect more false positives',
+        example     : 'Higher recall',
+      },
+      {
+        value       : '0.6',
+        label       : 'Balanced (0.6, default)',
+        description : 'Drops unverified numbers without context',
+        example     : 'Balanced precision / recall',
+      },
+      {
+        value       : '0.8',
+        label       : 'Strict (0.8)',
+        description : 'Only report checksum-verified or strongly-contextual matches',
+        example     : 'Higher precision',
+      },
+    ],
+  },
+  injection_check: {
+    label   : 'Prompt-Injection Check',
+    icon    : '🛑',
+    hint    : 'Runs the prompt-injection model on every scan and adds its score to the risk.',
+    options : [
+      {
+        value       : 'true',
+        label       : 'Enabled',
+        description : 'Flag jailbreak / instruction-override attempts',
+        example     : '"ignore previous instructions…" → CRITICAL',
+      },
+      {
+        value       : 'false',
+        label       : 'Disabled',
+        description : 'Skip the injection model (faster scans)',
+        example     : 'No injection score',
+      },
+    ],
+  },
 };
 
 // ── Helper: severity colour ───────────────────────────────────────────────────

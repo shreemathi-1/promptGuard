@@ -1,14 +1,21 @@
 import { useState, useRef } from 'react';
-import { maskText }            from '../api/client';
+import { maskText, scoreDetections } from '../api/client';
 import PageHeader              from '../components/PageHeader';
 import MaskStyleSelector       from '../components/MaskStyleSelector';
 import SeverityTag             from '../components/SeverityTag';
-import RiskBreakdown       from '../components/RiskBreakdown';
-import { scoreDetections } from '../api/client';
+import RiskBreakdown           from '../components/RiskBreakdown';
+import DetectionModeToggle     from '../components/DetectionModeToggle';
+import AiStatusBanner          from '../components/AiStatusBanner';
 
 // ── Example inputs ────────────────────────────────────────────────────────────
 
 const EXAMPLES = [
+  {
+    label : 'Name + city + Aadhaar',
+    text  :
+      'Patient Priya Sharma from Chennai was diagnosed with diabetes.\n' +
+      'Aadhaar on file: 2345 6789 0124.',
+  },
   {
     label : 'Card + SSN + Email',
     text  :
@@ -126,7 +133,7 @@ function ReplacementTable({ replacements }) {
       }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-            {['#', 'Original', 'Replacement', 'Category', 'Severity'].map(h => (
+            {['#', 'Original', 'Replacement', 'Category', 'Severity', 'Source'].map(h => (
               <th key={h} style={{
                 padding     : '7px 10px',
                 textAlign   : 'left',
@@ -172,6 +179,10 @@ function ReplacementTable({ replacements }) {
               </td>
               <td style={{ padding: '8px 10px' }}>
                 <SeverityTag severity={r.severity} />
+              </td>
+              <td style={{ padding: '8px 10px', color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                {r.source ?? '—'}
+                {typeof r.confidence === 'number' && ` · ${Math.round(r.confidence * 100)}%`}
               </td>
             </tr>
           ))}
@@ -248,8 +259,9 @@ export default function MaskPage() {
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState(null);
   const [activeTab, setActiveTab] = useState('output'); // 'output' | 'table'
-  const textareaRef = useRef(null);
+  const [mode,      setMode]      = useState('HYBRID');
   const [scoreResult, setScoreResult] = useState(null);
+  const textareaRef = useRef(null);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -262,12 +274,13 @@ export default function MaskPage() {
   setScoreResult(null);
 
   try {
-    const data = await maskText(inputText, style);
+    const data = await maskText(inputText, style, mode);
     setResult(data);
     setActiveTab('output');
 
-    if (data.detections.length > 0) {
-      const scored = await scoreDetections(data.detections);
+    const injectionScore = data.injection?.score ?? null;
+    if (data.detections.length > 0 || data.injection?.isInjection) {
+      const scored = await scoreDetections(data.detections, injectionScore);
       setScoreResult(scored);
     }
   } catch (err) {
@@ -280,6 +293,7 @@ export default function MaskPage() {
   function handleExample(text) {
     setInputText(text);
     setResult(null);
+    setScoreResult(null);
     setError(null);
     textareaRef.current?.focus();
   }
@@ -287,6 +301,7 @@ export default function MaskPage() {
   function handleClear() {
     setInputText('');
     setResult(null);
+    setScoreResult(null);
     setError(null);
     textareaRef.current?.focus();
   }
@@ -362,6 +377,29 @@ export default function MaskPage() {
           />
         </div>
 
+        <div style={{ marginBottom: 16 }}>
+          <label style={{
+            display      : 'block',
+            fontSize     : 12,
+            fontWeight   : 600,
+            color        : 'var(--color-text-dim)',
+            marginBottom : 8,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}>
+            Detection Mode
+          </label>
+          <DetectionModeToggle
+            value={mode}
+            onChange={(v) => {
+              setMode(v);
+              setResult(null);
+              setScoreResult(null);
+            }}
+            disabled={loading}
+          />
+        </div>
+
         <hr className="divider" />
 
         {/* Textarea */}
@@ -370,7 +408,7 @@ export default function MaskPage() {
           value={inputText}
           onChange={e => {
             setInputText(e.target.value);
-            if (result) setResult(null);
+            if (result) { setResult(null); setScoreResult(null); }
           }}
           onKeyDown={handleKeyDown}
           placeholder="Paste or type text to scan and mask…"
@@ -443,6 +481,8 @@ export default function MaskPage() {
       {/* ── Results ── */}
       {hasResult && (
         <div>
+          <AiStatusBanner result={result} />
+
           {/* Stat row */}
           <div style={{
             display      : 'flex',
@@ -460,6 +500,25 @@ export default function MaskPage() {
               value={result.detectionCount}
               accent="var(--color-primary)"
             />
+            <StatPill
+              label="Mode"
+              value={result.effectiveMode}
+              accent={result.effectiveMode !== result.mode ? 'var(--color-warning)' : 'var(--color-text-dim)'}
+            />
+            {result.aiDetectionCount > 0 && (
+              <StatPill
+                label="AI found"
+                value={result.aiDetectionCount}
+                accent="#1d4ed8"
+              />
+            )}
+            {result.filteredCount > 0 && (
+              <StatPill
+                label="False +ves dropped"
+                value={result.filteredCount}
+                accent="var(--color-success)"
+              />
+            )}
             <StatPill
               label="Style"
               value={result.style}
@@ -493,22 +552,6 @@ export default function MaskPage() {
                 flexWrap       : 'wrap',
                 gap            : 8,
               }}>
-                {/* Risk breakdown */}
-{scoreResult && (
-  <div className="card" style={{ marginTop: 16 }}>
-    <div style={{
-      fontSize      : 11,
-      fontWeight    : 700,
-      color         : 'var(--color-muted)',
-      textTransform : 'uppercase',
-      letterSpacing : '0.5px',
-      marginBottom  : 14,
-    }}>
-      Risk Analysis
-    </div>
-    <RiskBreakdown scoreResult={scoreResult} />
-  </div>
-)}
                 {/* Tabs */}
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[
