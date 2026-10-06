@@ -14,6 +14,9 @@ class Settings:
     # Tests set this to false to start the API without loading any model
     load_models: bool = _flag("LOAD_MODELS", True)
     max_text_length: int = int(os.getenv("MAX_TEXT_LENGTH", "50000"))
+    # Smart-rewrite mappings (in memory only); TTL slides on each use
+    mapping_ttl_seconds: int = int(os.getenv("MAPPING_TTL_SECONDS", "3600"))
+    max_mappings: int = int(os.getenv("MAX_MAPPINGS", "1000"))
 
 
 settings = Settings()

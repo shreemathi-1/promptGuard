@@ -1,15 +1,3 @@
-import pytest
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-
-@pytest.fixture(scope="module")
-def client():
-    with TestClient(app) as c:
-        yield c
-
-
 def test_health_without_models(client):
     body = client.get("/health").json()
     assert body["status"] == "degraded"

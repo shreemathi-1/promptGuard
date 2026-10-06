@@ -52,6 +52,38 @@ export async function maskText(text, style = 'REDACT', mode) {
   return res.data;
 }
 
+// ── Smart Rewrite ─────────────────────────────────────────────────────────
+
+/**
+ * Swaps sensitive values for realistic fakes.
+ * @param {string} text
+ * @param {object} [opts]
+ * @param {'REGEX'|'AI'|'HYBRID'} [opts.mode]
+ * @param {string} [opts.mappingId] — reuse fakes from an earlier rewrite
+ * @returns {Promise<RewriteResult>}
+ */
+export async function rewriteText(text, { mode, mappingId } = {}) {
+  const res = await http.post('/api/ai/rewrite', { text, mode, mappingId });
+  return res.data;
+}
+
+/**
+ * Puts the original values back into a chatbot reply.
+ * @param {string} mappingId
+ * @param {string} text
+ * @returns {Promise<{ text, restoredCount, restored }>}
+ */
+export async function restoreText(mappingId, text) {
+  const res = await http.post('/api/ai/restore', { mappingId, text });
+  return res.data;
+}
+
+/** Forgets a rewrite mapping before it expires. */
+export async function forgetRewrite(mappingId) {
+  const res = await http.delete(`/api/ai/rewrite/${encodeURIComponent(mappingId)}`);
+  return res.data;
+}
+
 // ── Audit ─────────────────────────────────────────────────────────────────
 
 /**

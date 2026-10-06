@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: '/',         label: 'Health'   },
   { to: '/scan',     label: 'Scan'     },
   { to: '/mask',     label: 'Mask'     },
+  { to: '/rewrite',  label: 'Rewrite'  },
   { to: '/audit',    label: 'Audit'    },
   { to: '/rules',    label: 'Rules'    },
   { to: '/settings', label: 'Settings' },

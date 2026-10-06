@@ -12,6 +12,7 @@ const rulesRouter    = require('./routes/rules');
 const riskRouter     = require('./routes/risk');
 const exportRouter   = require('./routes/export');
 const settingsRouter = require('./routes/settings');
+const aiRouter       = require('./routes/ai');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/rules',    rulesRouter);
 app.use('/api/risk',     riskRouter);
 app.use('/api/export',   exportRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/ai',       aiRouter);
 
 app.get('/', (req, res) => {
   res.json({ success: true, data: { message: 'DLP API is running' } });

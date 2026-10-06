@@ -67,10 +67,14 @@ async function request(method, path, body) {
     throw new MlUnavailableError(`ML service ${path} returned ${res.status}`);
   }
 
-  const data = await res.json();
+  const data = res.status === 204 ? null : await res.json();
   if (!res.ok) {
     // 4xx is a bad request from us, not an outage — don't trip the breaker
-    throw new Error(`ML service ${path} rejected request (${res.status}): ${JSON.stringify(data.detail ?? data)}`);
+    recordSuccess();
+    const err = new Error(`ML service ${path} rejected request (${res.status}): ${JSON.stringify(data?.detail ?? data)}`);
+    err.status = res.status;
+    err.detail = data?.detail;
+    throw err;
   }
 
   recordSuccess();
@@ -92,6 +96,25 @@ function injection(text) {
   return request('POST', '/injection', { text });
 }
 
+/**
+ * Smart rewrite: swaps detections for realistic fakes.
+ * Pass mappingId from an earlier rewrite to keep the same fakes.
+ * → { text, mappingId, replacements: [{ category, original, fake, start, end, fakeStart, fakeEnd }], ttlSeconds }
+ */
+function pseudonymize(text, entities, mappingId) {
+  return request('POST', '/pseudonymize', { text, entities, mappingId: mappingId || undefined });
+}
+
+/** Puts the original values back into text (e.g. a chatbot's reply) → { text, restoredCount, restored } */
+function restore(mappingId, text) {
+  return request('POST', '/restore', { mappingId, text });
+}
+
+/** Drops a rewrite mapping before its TTL. */
+function forgetMapping(mappingId) {
+  return request('DELETE', `/mappings/${encodeURIComponent(mappingId)}`);
+}
+
 function health() {
   return request('GET', '/health');
 }
@@ -106,6 +129,9 @@ module.exports = {
   detect,
   validate,
   injection,
+  pseudonymize,
+  restore,
+  forgetMapping,
   health,
   isEnabled,
   isCircuitOpen,

@@ -11,9 +11,12 @@ from fastapi import FastAPI, HTTPException
 
 from .config import settings
 from .injection import INJECTION_THRESHOLD, InjectionClassifier
+from .pseudonymizer import MappingStore
 from .schemas import (
     DetectRequest, DetectResponse, HitAssessment, InjectionRequest,
-    InjectionResponse, ValidateRequest, ValidateResponse,
+    InjectionResponse, PseudonymizeRequest, PseudonymizeResponse,
+    PseudonymReplacement, RestoreRequest, RestoreResponse,
+    ValidateRequest, ValidateResponse,
 )
 from .validators import assess_hit
 
@@ -21,6 +24,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(nam
 log = logging.getLogger("ml-service")
 
 state: dict = {"detector": None, "detector_error": None, "injection": None}
+mappings = MappingStore(settings.mapping_ttl_seconds, settings.max_mappings)
 
 
 @asynccontextmanager
@@ -67,6 +71,7 @@ def health():
             "model": injection.model_name if injection else None,
             "error": injection.load_error if injection else None,
         },
+        "pseudonymizer": {"activeMappings": len(mappings), "ttlSeconds": settings.mapping_ttl_seconds},
         "versions": {
             "presidio-analyzer": _pkg_version("presidio-analyzer"),
             "transformers": _pkg_version("transformers"),
@@ -92,6 +97,38 @@ def validate(req: ValidateRequest):
         a = assess_hit(req.text, hit.category, hit.match, hit.start, hit.end)
         results.append(HitAssessment(index=i, confidence=a.confidence, checksum=a.checksum, reasons=a.reasons))
     return ValidateResponse(results=results)
+
+
+@app.post("/pseudonymize", response_model=PseudonymizeResponse)
+def pseudonymize(req: PseudonymizeRequest):
+    start = time.perf_counter()
+    session = mappings.get_or_create(req.mappingId)
+    with session.lock:
+        text, replacements = session.pseudonymize(req.text, [e.model_dump() for e in req.entities])
+    return PseudonymizeResponse(
+        text=text,
+        mappingId=session.id,
+        replacements=[PseudonymReplacement(**r.__dict__) for r in replacements],
+        ttlSeconds=settings.mapping_ttl_seconds,
+        durationMs=_elapsed_ms(start),
+    )
+
+
+@app.post("/restore", response_model=RestoreResponse)
+def restore(req: RestoreRequest):
+    start = time.perf_counter()
+    session = mappings.get(req.mappingId)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Mapping not found or expired")
+    with session.lock:
+        text, counts = session.restore(req.text)
+    return RestoreResponse(text=text, restoredCount=sum(counts.values()), restored=counts, durationMs=_elapsed_ms(start))
+
+
+@app.delete("/mappings/{mapping_id}", status_code=204)
+def forget_mapping(mapping_id: str):
+    if not mappings.delete(mapping_id):
+        raise HTTPException(status_code=404, detail="Mapping not found or expired")
 
 
 @app.post("/injection", response_model=InjectionResponse)
