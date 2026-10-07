@@ -159,4 +159,61 @@ router.delete('/rewrite/:mappingId', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/ai/explain
+ *
+ * "Why is this risky?" for one detection. The template answer is instant and
+ * needs only the ML service; useLlm: true asks the local LLM (Ollama) for a
+ * version tailored to the surrounding text, with the value itself hidden.
+ *
+ * Body: { category, match?, context?, source?, confidence?, reasons?, recognizer?, useLlm? }
+ * Response data: { category, explanation: { summary, risks[], recommendation }, evidence[], source, model }
+ */
+router.post(
+  '/explain',
+  validate((req) => {
+    const { category, match, context, reasons, confidence } = req.body;
+    if (typeof category !== 'string' || !category.trim() || category.length > 50) {
+      return '"category" is required (max 50 characters)';
+    }
+    if (match !== undefined && (typeof match !== 'string' || match.length > 1000)) {
+      return '"match" must be a string of at most 1000 characters';
+    }
+    if (context !== undefined && (typeof context !== 'string' || context.length > 2000)) {
+      return '"context" must be a string of at most 2000 characters';
+    }
+    if (reasons !== undefined && (!Array.isArray(reasons) || reasons.length > 20 || reasons.some((r) => typeof r !== 'string'))) {
+      return '"reasons" must be an array of at most 20 strings';
+    }
+    if (confidence !== undefined && confidence !== null && (typeof confidence !== 'number' || confidence < 0 || confidence > 1)) {
+      return '"confidence" must be a number between 0 and 1';
+    }
+  }),
+  async (req, res, next) => {
+    try {
+      const { category, match = '', context = '', source, confidence, reasons = [], recognizer, useLlm = false } = req.body;
+      const result = await mlClient.explain({
+        category, match, context, reasons,
+        source     : source ?? null,
+        confidence : confidence ?? null,
+        recognizer : recognizer ?? null,
+        useLlm     : Boolean(useLlm),
+      });
+      return res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      if (err instanceof mlClient.LlmUnavailableError) {
+        return res.status(503).json({
+          success : false,
+          code    : err.code ?? 'LLM_UNAVAILABLE',
+          error   : `The local LLM is unavailable: ${err.message}`,
+        });
+      }
+      if (err instanceof mlClient.MlUnavailableError) {
+        return res.status(503).json({ success: false, error: 'Explanations need the ML service, which is unavailable' });
+      }
+      next(err);
+    }
+  }
+);
+
 module.exports = router;

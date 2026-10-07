@@ -9,6 +9,7 @@
     "seed": "cd apps/backend && node src/patterns/seedPatterns.js",
     "migrate": "npm --prefix apps/backend run migrate",
     "dev:ml": "cd apps/ml-service && .venv/bin/uvicorn app.main:app --reload --port 8000",
+    "dev:ollama": "ollama serve",
     "test:backend": "npm --prefix apps/backend test",
     "test:ml": "cd apps/ml-service && .venv/bin/python -m pytest -q",
     "build:frontend": "npm --prefix apps/frontend run build",

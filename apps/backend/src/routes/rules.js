@@ -2,6 +2,7 @@ const express = require('express');
 const { query }          = require('../config/db');
 const { validate }       = require('../middleware/validate');
 const { reloadPatterns } = require('../services/scanner');
+const mlClient           = require('../services/mlClient');
 
 const router = express.Router();
 
@@ -14,6 +15,10 @@ const VALID_CATEGORIES = [
 ];
 
 const VALID_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+const VALID_SOURCES    = ['MANUAL', 'AI_GENERATED'];
+
+const MAX_EXAMPLES    = 20;
+const MAX_EXAMPLE_LEN = 200;
 
 const MAX_NAME_LEN        = 100;
 const MAX_DESCRIPTION_LEN = 500;
@@ -50,6 +55,7 @@ function formatRule(row) {
     severity    : row.severity,
     isActive    : row.is_active,
     isBuiltin   : row.is_builtin,
+    source      : row.source ?? 'MANUAL',
     createdAt   : row.created_at,
     updatedAt   : row.updated_at,
   };
@@ -131,7 +137,7 @@ router.get('/', async (req, res, next) => {
     const result = await query(
       `SELECT
          id, name, description, pattern, category,
-         severity, is_active, is_builtin, created_at, updated_at
+         severity, is_active, is_builtin, source, created_at, updated_at
        FROM scan_patterns
        ${where}
        ORDER BY is_builtin DESC, severity DESC, name ASC`,
@@ -163,7 +169,7 @@ router.get('/:id', async (req, res, next) => {
     const result = await query(
       `SELECT
          id, name, description, pattern, category,
-         severity, is_active, is_builtin, created_at, updated_at
+         severity, is_active, is_builtin, source, created_at, updated_at
        FROM scan_patterns
        WHERE id = $1`,
       [id]
@@ -229,6 +235,9 @@ router.post(
     if (description && typeof description === 'string' && description.length > MAX_DESCRIPTION_LEN) {
       return `"description" must be ${MAX_DESCRIPTION_LEN} characters or fewer`;
     }
+    if (req.body.source !== undefined && !VALID_SOURCES.includes(req.body.source)) {
+      return `"source" must be one of: ${VALID_SOURCES.join(', ')}`;
+    }
   }),
   async (req, res, next) => {
     try {
@@ -239,6 +248,7 @@ router.post(
         severity,
         description = null,
         isActive    = true,
+        source      = 'MANUAL',
       } = req.body;
 
       // Check for duplicate name
@@ -255,11 +265,11 @@ router.post(
 
       const result = await query(
         `INSERT INTO scan_patterns
-           (name, description, pattern, category, severity, is_active, is_builtin)
-         VALUES ($1, $2, $3, $4, $5, $6, FALSE)
+           (name, description, pattern, category, severity, is_active, is_builtin, source)
+         VALUES ($1, $2, $3, $4, $5, $6, FALSE, $7)
          RETURNING
            id, name, description, pattern, category,
-           severity, is_active, is_builtin, created_at, updated_at`,
+           severity, is_active, is_builtin, source, created_at, updated_at`,
         [
           name.trim(),
           description?.trim() ?? null,
@@ -267,6 +277,7 @@ router.post(
           category.toUpperCase().trim(),
           severity.toUpperCase().trim(),
           Boolean(isActive),
+          source,
         ]
       );
 
@@ -278,6 +289,140 @@ router.post(
         data    : formatRule(result.rows[0]),
       });
     } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// ── POST /api/rules/generate ──────────────────────────────────────────────────
+//
+// AI rule generator: plain English + examples → a regex proposed by the local
+// LLM (Ollama), tested in the ML service, then re-tested here with the exact
+// engine the scanner uses (new RegExp(pattern, 'gi')). Nothing is saved; the
+// client reviews the result and creates the rule with source: 'AI_GENERATED'.
+//
+// Body:
+// {
+//   description: string           e.g. "Internal employee IDs like EMP-123456"
+//   examples:    string[]         values that must match (1–20)
+//   negatives?:  string[]         text that must not match
+//   category?:   string           force a category
+// }
+//
+// Response data:
+// {
+//   rule: { pattern, name, category, severity, explanation, problems, warnings,
+//           strategy: 'LLM' | 'EXAMPLES' }  — EXAMPLES: inferred from the examples' structure
+//   tests: [{ text, expected, matched, passed }]   — from the JavaScript engine
+//   verified: bool                                 — compiles in JS and every test passes
+//   attempts, model (null when Ollama was unavailable), durationMs
+// }
+
+function stringListError(list, field, { required }) {
+  if (list === undefined || list === null) {
+    return required ? `"${field}" is required` : null;
+  }
+  if (!Array.isArray(list) || list.some((x) => typeof x !== 'string')) {
+    return `"${field}" must be an array of strings`;
+  }
+  const items = list.filter((x) => x.trim());
+  if (required && items.length === 0) return `"${field}" needs at least one non-empty value`;
+  if (items.length > MAX_EXAMPLES) return `"${field}" can have at most ${MAX_EXAMPLES} values`;
+  if (items.some((x) => x.length > MAX_EXAMPLE_LEN)) {
+    return `each value in "${field}" must be ${MAX_EXAMPLE_LEN} characters or fewer`;
+  }
+  return null;
+}
+
+/** Same checks as the ML service, but with JavaScript's regex engine. */
+function testInJs(pattern, examples, negatives) {
+  let re;
+  try {
+    re = new RegExp(pattern, 'gi');
+  } catch (err) {
+    return { error: `Invalid regex in JavaScript: ${err.message}`, tests: [] };
+  }
+  const tests = [
+    ...examples.map((text) => {
+      const found = [...text.matchAll(re)].map((m) => m[0]).filter(Boolean);
+      return { text, expected: true, matched: found[0] ?? null, passed: found.includes(text.trim()) };
+    }),
+    ...negatives.map((text) => {
+      const m = [...text.matchAll(re)].find((x) => x[0]);
+      return { text, expected: false, matched: m?.[0] ?? null, passed: !m };
+    }),
+  ];
+  return { error: null, tests };
+}
+
+router.post(
+  '/generate',
+  validate((req) => {
+    const { description, examples, negatives, category } = req.body;
+    if (typeof description !== 'string' || description.trim().length < 3) {
+      return '"description" must be at least 3 characters';
+    }
+    if (description.length > MAX_DESCRIPTION_LEN) {
+      return `"description" must be ${MAX_DESCRIPTION_LEN} characters or fewer`;
+    }
+    const listError = stringListError(examples, 'examples', { required: true })
+      ?? stringListError(negatives, 'negatives', { required: false });
+    if (listError) return listError;
+    if (category !== undefined && category !== null && category !== ''
+        && !VALID_CATEGORIES.includes(String(category).toUpperCase())) {
+      return `"category" must be one of: ${VALID_CATEGORIES.join(', ')}`;
+    }
+  }),
+  async (req, res, next) => {
+    try {
+      const examples  = req.body.examples.map((x) => x.trim()).filter(Boolean);
+      const negatives = (req.body.negatives ?? []).map((x) => x.trim()).filter(Boolean);
+      const category  = req.body.category ? String(req.body.category).toUpperCase() : undefined;
+
+      const startTime = Date.now();
+      const generated = await mlClient.generateRule({
+        description: req.body.description.trim(), examples, negatives, category,
+      });
+
+      const { rule } = generated;
+      const js = testInJs(rule.pattern, examples, negatives);
+      const problems = js.error ? [...rule.problems, js.error] : rule.problems;
+      const verified = problems.length === 0 && js.tests.every((t) => t.passed);
+
+      return res.status(200).json({
+        success : true,
+        data    : {
+          rule: {
+            pattern     : rule.pattern,
+            name        : rule.name,
+            category    : rule.category,
+            severity    : rule.severity,
+            explanation : rule.explanation,
+            problems,
+            warnings    : rule.warnings,
+            strategy    : rule.strategy,
+          },
+          tests      : js.tests,
+          verified,
+          attempts   : generated.attempts,
+          model      : generated.model,
+          durationMs : Date.now() - startTime,
+        },
+      });
+    } catch (err) {
+      if (err instanceof mlClient.LlmUnavailableError) {
+        return res.status(503).json({
+          success : false,
+          code    : err.code ?? 'LLM_UNAVAILABLE',
+          error   : `The local LLM is unavailable: ${err.message}. Start it with \`ollama serve\`.`,
+        });
+      }
+      if (err instanceof mlClient.MlUnavailableError) {
+        return res.status(503).json({ success: false, error: 'The AI rule generator needs the ML service, which is unavailable' });
+      }
+      if (err.status >= 400 && err.status < 500) {
+        return res.status(400).json({ success: false, error: err.message });
+      }
       next(err);
     }
   }
@@ -394,7 +539,7 @@ router.put(
            WHERE id = $2
            RETURNING
              id, name, description, pattern, category,
-             severity, is_active, is_builtin, created_at, updated_at`,
+             severity, is_active, is_builtin, source, created_at, updated_at`,
           [Boolean(isActive), id]
         );
 
@@ -467,7 +612,7 @@ router.put(
          WHERE id = $${idx}
          RETURNING
            id, name, description, pattern, category,
-           severity, is_active, is_builtin, created_at, updated_at`,
+           severity, is_active, is_builtin, source, created_at, updated_at`,
         values
       );
 
@@ -555,7 +700,7 @@ router.patch('/:id/toggle', async (req, res, next) => {
        WHERE id = $2
        RETURNING
          id, name, description, pattern, category,
-         severity, is_active, is_builtin, created_at, updated_at`,
+         severity, is_active, is_builtin, source, created_at, updated_at`,
       [!currentActive, id]
     );
 

@@ -23,9 +23,24 @@ services:
       SPACY_MODEL: en_core_web_sm
       NER_MODEL: dslim/bert-base-NER
       ENABLE_INJECTION_MODEL: "true"
+      # Optional local LLM (rule generator, "Why?" explanations).
+      # Start it with `docker compose --profile llm up`, or point this at Ollama on the host:
+      #   OLLAMA_URL=http://host.docker.internal:11434 docker compose up
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:3b}
     ports:
       - "8000:8000"
     # Healthcheck is defined in the Dockerfile (models take ~30–60s to load)
+
+  # Only with `--profile llm`. Pull the model once:
+  #   docker compose exec ollama ollama pull qwen2.5-coder:3b
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["llm"]
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
 
   backend:
     build: ./apps/backend
@@ -66,3 +81,4 @@ services:
 
 volumes:
   pgdata:
+  ollama:

@@ -84,6 +84,31 @@ export async function forgetRewrite(mappingId) {
   return res.data;
 }
 
+// ── AI: rule generator + explanations ─────────────────────────────────────
+
+// Local LLM calls (Ollama) can take a while on a laptop
+const LLM_TIMEOUT_MS = 160_000;
+
+/**
+ * Asks the local LLM for a regex, tested against the examples. Nothing is saved.
+ * @param {{ description: string, examples: string[], negatives?: string[], category?: string }} payload
+ * @returns {Promise<{ rule, tests, verified, attempts, model, durationMs }>}
+ */
+export async function generateRule(payload) {
+  const res = await http.post('/api/rules/generate', payload, { timeout: LLM_TIMEOUT_MS });
+  return res.data;
+}
+
+/**
+ * "Why is this risky?" for one detection.
+ * @param {object} payload — { category, match, context, source, confidence, reasons, recognizer, useLlm }
+ * @returns {Promise<{ explanation: { summary, risks, recommendation }, evidence, source, model }>}
+ */
+export async function explainDetection(payload) {
+  const res = await http.post('/api/ai/explain', payload, payload.useLlm ? { timeout: LLM_TIMEOUT_MS } : undefined);
+  return res.data;
+}
+
 // ── Audit ─────────────────────────────────────────────────────────────────
 
 /**

@@ -1,4 +1,5 @@
 import SeverityTag from './SeverityTag';
+import WhyPanel    from './WhyPanel';
 import { categoryIcon } from '../constants/categories';
 
 /**
@@ -213,6 +214,8 @@ export default function DetectionList({ detections, inputText }) {
               <MatchContext inputText={inputText} detection={d} />
             </div>
           )}
+
+          <WhyPanel detection={d} inputText={inputText} detections={detections} />
         </div>
       ))}
     </div>

@@ -103,6 +103,68 @@ class RestoreResponse(BaseModel):
     durationMs: int
 
 
+class GenerateRuleRequest(BaseModel):
+    description: str = Field(..., min_length=3, max_length=500)
+    examples: list[str] = Field(..., min_length=1, max_length=20)
+    negatives: list[str] = Field(default_factory=list, max_length=20)
+    category: Optional[str] = Field(None, max_length=50)
+
+
+class ExampleResultOut(BaseModel):
+    text: str
+    expected: bool
+    matched: Optional[str]
+    passed: bool
+
+
+class GeneratedRule(BaseModel):
+    pattern: str
+    name: str
+    category: str
+    severity: str
+    explanation: str
+    problems: list[str]
+    warnings: list[str]
+    results: list[ExampleResultOut]
+    allPassed: bool
+    # LLM, or EXAMPLES when the pattern inferred from the examples' structure won
+    strategy: Literal["LLM", "EXAMPLES"]
+
+
+class GenerateRuleResponse(BaseModel):
+    rule: GeneratedRule
+    attempts: int
+    model: Optional[str]   # None when Ollama was unavailable
+    durationMs: int
+
+
+class ExplainRequest(BaseModel):
+    category: str = Field(..., min_length=1, max_length=50)
+    match: str = Field("", max_length=1000)
+    # Text around the match; the value is hidden before it reaches the LLM
+    context: str = Field("", max_length=2000)
+    source: Optional[str] = None
+    confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
+    reasons: list[str] = Field(default_factory=list, max_length=20)
+    recognizer: Optional[str] = None
+    useLlm: bool = False
+
+
+class Explanation(BaseModel):
+    summary: str
+    risks: list[str]
+    recommendation: str
+
+
+class ExplainResponse(BaseModel):
+    category: str
+    explanation: Explanation
+    evidence: list[str]
+    source: Literal["TEMPLATE", "LLM"]
+    model: Optional[str]
+    durationMs: int
+
+
 class InjectionResponse(BaseModel):
     score: float
     modelScore: Optional[float]   # None when the model is not loaded

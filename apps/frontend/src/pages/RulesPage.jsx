@@ -103,6 +103,15 @@ function RuleCard({ rule, onToggle, onEdit, onDelete, toggling, deleting }) {
             <span style={{ fontWeight: 700, fontSize: 14 }}>{rule.name || rule.category}</span>
             <SeverityTag severity={rule.severity} />
 
+            {rule.source === 'AI_GENERATED' && (
+              <span className="tag" title="Created with the AI rule generator" style={{
+                background : '#e6effc',
+                color      : '#1d4ed8',
+              }}>
+                ✨ AI
+              </span>
+            )}
+
             {rule.isBuiltin && (
               <span className="tag" style={{
                 background : 'var(--color-primary-dim)',

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import RuleGenerator from './RuleGenerator';
 
 /**
  * Modal for creating or editing a custom rule.
@@ -10,9 +11,11 @@ import { useState, useEffect, useRef } from 'react';
  *   onClose   — () => void
  */
 
+// Must match VALID_CATEGORIES in apps/backend/src/routes/rules.js
 const CATEGORIES = [
   'CREDIT_CARD', 'PHONE', 'SSN', 'BANK_ACCOUNT',
   'EMAIL', 'PASSPORT', 'API_KEY', 'CUSTOM',
+  'AADHAAR', 'PAN', 'IFSC', 'IP_ADDRESS', 'MAC_ADDRESS',
 ];
 
 const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
@@ -31,6 +34,7 @@ const EMPTY_FORM = {
   severity    : 'HIGH',
   description : '',
   isActive    : true,
+  source      : 'MANUAL',
 };
 
 /**
@@ -120,6 +124,8 @@ export default function RuleFormModal({ mode, rule, onSubmit, onClose }) {
     'Test input: john@example.com, 4111 1111 1111 1111, (555) 867-5309'
   );
 
+  const [tab, setTab] = useState('manual');   // 'manual' | 'ai' (create mode only)
+
   const nameRef = useRef(null);
 
   // Auto-focus name field on open
@@ -146,6 +152,13 @@ export default function RuleFormModal({ mode, rule, onSubmit, onClose }) {
     setForm(prev => ({ ...prev, [key]: value }));
     setFieldErrors(prev => ({ ...prev, [key]: undefined }));
     setSubmitError(null);
+  }
+
+  function handleUseGenerated(generated) {
+    setForm(prev => ({ ...prev, ...generated, source: 'AI_GENERATED' }));
+    setFieldErrors({});
+    setSubmitError(null);
+    setTab('manual');
   }
 
   function validate() {
@@ -176,6 +189,8 @@ export default function RuleFormModal({ mode, rule, onSubmit, onClose }) {
         severity    : form.severity,
         description : form.description.trim() || null,
         isActive    : form.isActive,
+        // Rules can't change source after creation
+        ...(isEdit ? {} : { source: form.source }),
       };
       await onSubmit(payload);
       onClose();
@@ -251,8 +266,56 @@ export default function RuleFormModal({ mode, rule, onSubmit, onClose }) {
           </button>
         </div>
 
+        {/* Tabs (create only) */}
+        {!isEdit && (
+          <div style={{ display: 'flex', gap: 4, padding: '12px 24px 0' }}>
+            {[
+              { id: 'manual', label: 'Write manually' },
+              { id: 'ai',     label: '✨ Generate with AI' },
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className="btn btn-ghost"
+                style={{
+                  fontSize    : 12,
+                  padding     : '5px 12px',
+                  background  : tab === t.id ? 'var(--color-primary-dim)' : 'transparent',
+                  color       : tab === t.id ? 'var(--color-primary)' : 'var(--color-text-dim)',
+                  borderColor : tab === t.id ? 'var(--color-primary)' : 'var(--color-border)',
+                  fontWeight  : tab === t.id ? 700 : 500,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* AI generator tab */}
+        {tab === 'ai' && (
+          <div style={{ padding: '20px 24px 24px' }}>
+            <RuleGenerator onUse={handleUseGenerated} />
+          </div>
+        )}
+
         {/* Body */}
+        {tab === 'manual' && (
         <div style={{ padding: '24px' }}>
+
+          {form.source === 'AI_GENERATED' && !isEdit && (
+            <div style={{
+              marginBottom : 16,
+              background   : '#e6effc',
+              border       : '1px solid #93b4f0',
+              borderRadius : 'var(--radius)',
+              padding      : '8px 12px',
+              fontSize     : 12,
+              color        : '#1d4ed8',
+            }}>
+              ✨ Filled in by the AI rule generator — review the fields, then create the rule.
+            </div>
+          )}
 
           {/* Name */}
           <Field label="Rule Name" required error={fieldErrors.name}>
@@ -478,6 +541,7 @@ export default function RuleFormModal({ mode, rule, onSubmit, onClose }) {
             </div>
           )}
         </div>
+        )}
 
         {/* Footer */}
         <div style={{
@@ -497,6 +561,7 @@ export default function RuleFormModal({ mode, rule, onSubmit, onClose }) {
           >
             Cancel
           </button>
+          {tab === 'manual' && (
           <button
             className="btn btn-primary"
             onClick={handleSubmit}
@@ -507,6 +572,7 @@ export default function RuleFormModal({ mode, rule, onSubmit, onClose }) {
               ? (isEdit ? 'Saving…' : 'Creating…')
               : (isEdit ? '✓ Save Changes' : '+ Create Rule')}
           </button>
+          )}
         </div>
       </div>
     </>

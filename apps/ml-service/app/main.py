@@ -8,12 +8,17 @@ from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError, version
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 
 from .config import settings
+from .explainer import evidence, llm_explanation, template_explanation
 from .injection import INJECTION_THRESHOLD, InjectionClassifier
+from .llm import LlmResponseError, LlmUnavailableError, ollama
 from .pseudonymizer import MappingStore
+from .rule_generator import generate_rule as run_rule_generator
 from .schemas import (
-    DetectRequest, DetectResponse, HitAssessment, InjectionRequest,
+    DetectRequest, DetectResponse, ExplainRequest, ExplainResponse,
+    GenerateRuleRequest, GenerateRuleResponse, HitAssessment, InjectionRequest,
     InjectionResponse, PseudonymizeRequest, PseudonymizeResponse,
     PseudonymReplacement, RestoreRequest, RestoreResponse,
     ValidateRequest, ValidateResponse,
@@ -44,6 +49,17 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="PromptGuard ML Service", version="1.0.0", lifespan=lifespan)
 
 
+@app.exception_handler(LlmUnavailableError)
+def llm_unavailable(_request, exc: LlmUnavailableError):
+    # The code lets the backend tell "no local LLM" apart from "ML service down"
+    return JSONResponse(status_code=503, content={"detail": {"code": "LLM_UNAVAILABLE", "message": str(exc)}})
+
+
+@app.exception_handler(LlmResponseError)
+def llm_bad_response(_request, exc: LlmResponseError):
+    return JSONResponse(status_code=502, content={"detail": {"code": "LLM_BAD_RESPONSE", "message": str(exc)}})
+
+
 def _elapsed_ms(start: float) -> int:
     return int((time.perf_counter() - start) * 1000)
 
@@ -71,6 +87,7 @@ def health():
             "model": injection.model_name if injection else None,
             "error": injection.load_error if injection else None,
         },
+        "llm": ollama.status(),
         "pseudonymizer": {"activeMappings": len(mappings), "ttlSeconds": settings.mapping_ttl_seconds},
         "versions": {
             "presidio-analyzer": _pkg_version("presidio-analyzer"),
@@ -129,6 +146,47 @@ def restore(req: RestoreRequest):
 def forget_mapping(mapping_id: str):
     if not mappings.delete(mapping_id):
         raise HTTPException(status_code=404, detail="Mapping not found or expired")
+
+
+@app.post("/generate-rule", response_model=GenerateRuleResponse)
+def generate_rule(req: GenerateRuleRequest):
+    start = time.perf_counter()
+    examples = [e.strip() for e in req.examples if e.strip()]
+    negatives = [n.strip() for n in req.negatives if n.strip()]
+    if not examples:
+        raise HTTPException(status_code=422, detail="at least one non-empty example is required")
+
+    best, attempts, model = run_rule_generator(
+        ollama, req.description.strip(), examples, negatives, req.category,
+        budget_seconds=settings.rule_generation_budget_seconds,
+    )
+    return GenerateRuleResponse(
+        rule={
+            "pattern": best.pattern, "name": best.name, "category": best.category,
+            "severity": best.severity, "explanation": best.explanation,
+            "problems": best.problems, "warnings": best.warnings,
+            "results": [r.__dict__ for r in best.results], "allPassed": best.ok,
+            "strategy": best.strategy,
+        },
+        attempts=len(attempts),
+        model=model or None,
+        durationMs=_elapsed_ms(start),
+    )
+
+
+@app.post("/explain", response_model=ExplainResponse)
+def explain(req: ExplainRequest):
+    start = time.perf_counter()
+    facts = evidence(req.source, req.confidence, req.reasons, req.recognizer)
+    if req.useLlm:
+        explanation, model = llm_explanation(ollama, req.category, req.context, req.match, facts)
+        source = "LLM"
+    else:
+        explanation, model, source = template_explanation(req.category), None, "TEMPLATE"
+    return ExplainResponse(
+        category=req.category.upper(), explanation=explanation, evidence=facts,
+        source=source, model=model, durationMs=_elapsed_ms(start),
+    )
 
 
 @app.post("/injection", response_model=InjectionResponse)

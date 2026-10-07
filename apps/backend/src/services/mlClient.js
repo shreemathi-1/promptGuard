@@ -19,6 +19,14 @@ class MlUnavailableError extends Error {
   }
 }
 
+/** The ML service is up, but its optional local LLM (Ollama) is not. */
+class LlmUnavailableError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'LlmUnavailableError';
+  }
+}
+
 const breaker = {
   failures : 0,
   openUntil: 0,
@@ -45,9 +53,15 @@ function recordFailure() {
   }
 }
 
-async function request(method, path, body) {
+/**
+ * @param {object} [opts]
+ * @param {number}  [opts.timeoutMs] — defaults to ML_TIMEOUT_MS
+ * @param {boolean} [opts.breaker=true] — false for slow LLM calls, so a
+ *        missing or slow Ollama never switches off AI detection
+ */
+async function request(method, path, body, { timeoutMs = env.ml.timeoutMs, breaker: useBreaker = true } = {}) {
   if (!isEnabled()) throw new MlUnavailableError('ML service is disabled');
-  if (isCircuitOpen()) throw new MlUnavailableError('ML service circuit is open');
+  if (useBreaker && isCircuitOpen()) throw new MlUnavailableError('ML service circuit is open');
 
   let res;
   try {
@@ -55,29 +69,42 @@ async function request(method, path, body) {
       method,
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
       body   : body ? JSON.stringify(body) : undefined,
-      signal : AbortSignal.timeout(env.ml.timeoutMs),
+      signal : AbortSignal.timeout(timeoutMs),
     });
   } catch (err) {
-    recordFailure();
+    if (useBreaker) recordFailure();
     throw new MlUnavailableError(`ML service unreachable: ${err.message}`);
   }
 
+  if (res.status === 503 || res.status === 502) {
+    // The ML service answered, so it's up; only its LLM is missing or misbehaving
+    const data = await res.json().catch(() => null);
+    const code = data?.detail?.code;
+    if (code === 'LLM_UNAVAILABLE' || code === 'LLM_BAD_RESPONSE') {
+      const err = new LlmUnavailableError(data.detail.message);
+      err.code = code;
+      throw err;
+    }
+    if (useBreaker) recordFailure();
+    throw new MlUnavailableError(`ML service ${path} returned ${res.status}`);
+  }
+
   if (res.status >= 500) {
-    recordFailure();
+    if (useBreaker) recordFailure();
     throw new MlUnavailableError(`ML service ${path} returned ${res.status}`);
   }
 
   const data = res.status === 204 ? null : await res.json();
   if (!res.ok) {
     // 4xx is a bad request from us, not an outage — don't trip the breaker
-    recordSuccess();
+    if (useBreaker) recordSuccess();
     const err = new Error(`ML service ${path} rejected request (${res.status}): ${JSON.stringify(data?.detail ?? data)}`);
     err.status = res.status;
     err.detail = data?.detail;
     throw err;
   }
 
-  recordSuccess();
+  if (useBreaker) recordSuccess();
   return data;
 }
 
@@ -115,6 +142,24 @@ function forgetMapping(mappingId) {
   return request('DELETE', `/mappings/${encodeURIComponent(mappingId)}`);
 }
 
+/**
+ * AI rule generator (needs Ollama).
+ * → { rule: { pattern, name, category, severity, explanation, problems, warnings, results, allPassed }, attempts, model }
+ */
+function generateRule({ description, examples, negatives = [], category }) {
+  return request('POST', '/generate-rule', { description, examples, negatives, category },
+    { timeoutMs: env.ml.llmTimeoutMs, breaker: false });
+}
+
+/**
+ * "Why is this risky?" for one detection. useLlm: false → instant template; true → needs Ollama.
+ * → { category, explanation: { summary, risks, recommendation }, evidence, source, model }
+ */
+function explain(payload) {
+  return request('POST', '/explain', payload,
+    payload.useLlm ? { timeoutMs: env.ml.llmTimeoutMs, breaker: false } : undefined);
+}
+
 function health() {
   return request('GET', '/health');
 }
@@ -132,9 +177,12 @@ module.exports = {
   pseudonymize,
   restore,
   forgetMapping,
+  generateRule,
+  explain,
   health,
   isEnabled,
   isCircuitOpen,
   resetBreaker,
   MlUnavailableError,
+  LlmUnavailableError,
 };
