@@ -37,7 +37,7 @@ _rng = random.SystemRandom()
 MAX_ATTEMPTS = 20
 
 MEDICAL_CONDITIONS = [
-    "asthma", "migraine", "hypertension", "eczema", "anaemia", "arthritis",
+    "asthma", "migraine", "hypertension", "eczema", "anaemia", "arthritis",  # promptguard:ignore
     "hypothyroidism", "sinusitis", "gastritis", "insomnia",
 ]
 
@@ -204,7 +204,11 @@ def fake_value(category: str, original: str) -> str:
 # ── Session mapping ──────────────────────────────────────────────────────────
 
 # Words that say nothing about who or where ("Infosys Ltd" → "Kumar Ltd" is fine)
-GENERIC_WORDS = {"and", "the", "of", "ltd", "pvt", "inc", "llc", "limited", "sons", "group", "co", "corp"}
+GENERIC_WORDS = {
+    "and", "the", "of", "ltd", "pvt", "inc", "llc", "limited", "sons", "group", "co", "corp",
+    # Email domains: a fake "@gmail.com" address reveals nothing about the original
+    "com", "in", "org", "net", "io", "gmail", "yahoo", "hotmail", "outlook", "mail", "email",
+}
 
 
 def _words(value: str) -> set[str]:

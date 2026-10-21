@@ -1,0 +1,14 @@
+# Paths `promptguard scan` skips in this repo (gitignore-style globs).
+# These files contain synthetic PII and fake keys on purpose.
+
+# Labelled evaluation data and benchmark output
+eval/data/
+eval/results/
+
+# Test fixtures
+apps/ml-service/tests/
+apps/backend/tests/
+packages/cli/test/
+apps/vscode-extension/test/
+scripts/e2e-smoke.sh
+.pytest_cache/

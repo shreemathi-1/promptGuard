@@ -1,14 +1,14 @@
 import { NavLink } from 'react-router-dom';
-import { useHealth } from '../hooks/useHealth';
-import StatusBadge from './StatusBadge';
 
 const NAV_ITEMS = [
-  { to: '/',         label: 'Health'   },
+  { to: '/',         label: 'Dashboard' },
+  { to: '/health',   label: 'Health'   },
   { to: '/scan',     label: 'Scan'     },
   { to: '/mask',     label: 'Mask'     },
   { to: '/rewrite',  label: 'Rewrite'  },
   { to: '/audit',    label: 'Audit'    },
   { to: '/rules',    label: 'Rules'    },
+  { to: '/benchmark', label: 'Benchmark' },
   { to: '/settings', label: 'Settings' },
 ];
 
@@ -28,11 +28,6 @@ const activeLinkStyle = {
 };
 
 export default function NavBar() {
-  const { health, loading } = useHealth(30_000);
-
-  const dbStatus  = loading ? 'checking' : (health?.database ?? 'unreachable');
-  const apiStatus = loading ? 'checking' : (health?.api     ?? 'unreachable');
-
 
   return (
     <nav style={{

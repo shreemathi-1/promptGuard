@@ -21,10 +21,14 @@ const mlClient = require('./mlClient');
 
 const DETECTION_MODES = ['REGEX', 'AI', 'HYBRID'];
 
+// sensitivity_level = lowest severity a Scan reports (LOW reports everything)
+const SEVERITY_RANK = { LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+
 const DEFAULT_SETTINGS = {
   mode          : 'HYBRID',
   threshold     : 0.6,
   injectionCheck: true,
+  minSeverity   : 'LOW',
 };
 
 const AI_PATTERN_NAMES = {
@@ -39,7 +43,7 @@ async function loadDetectionSettings() {
   try {
     const result = await query(
       `SELECT key, value FROM settings WHERE key = ANY($1)`,
-      [['detection_mode', 'ai_confidence_threshold', 'injection_check']]
+      [['detection_mode', 'ai_confidence_threshold', 'injection_check', 'sensitivity_level']]
     );
     const values = Object.fromEntries(result.rows.map((r) => [r.key, r.value]));
     const threshold = parseFloat(values.ai_confidence_threshold);
@@ -48,6 +52,7 @@ async function loadDetectionSettings() {
       mode          : DETECTION_MODES.includes(values.detection_mode) ? values.detection_mode : DEFAULT_SETTINGS.mode,
       threshold     : Number.isFinite(threshold) ? threshold : DEFAULT_SETTINGS.threshold,
       injectionCheck: values.injection_check !== undefined ? values.injection_check === 'true' : DEFAULT_SETTINGS.injectionCheck,
+      minSeverity   : SEVERITY_RANK[values.sensitivity_level] ? values.sensitivity_level : DEFAULT_SETTINGS.minSeverity,
     };
   } catch (err) {
     console.error('[Pipeline] Failed to load settings, using defaults:', err.message);
@@ -99,14 +104,18 @@ function valueOf(settled) {
  * Runs detection on text.
  *
  * @param {string} text
- * @param {{ mode?: string, threshold?: number, injectionCheck?: boolean }} [overrides]
+ * @param {{ mode?: string, threshold?: number, injectionCheck?: boolean, applySensitivity?: boolean, mlOptions?: object }} [overrides]
  *        Per-request overrides; anything omitted comes from the settings table.
+ *        mlOptions ({ timeoutMs, breaker }) is passed to every ML call.
+ *        applySensitivity: true hides detections below the sensitivity_level setting. Only Scan
+ *        sets it: Mask and Smart Rewrite must cover every finding, and the benchmark and batch
+ *        scans (CLI / extension have their own severity thresholds) need them all.
  * @returns {Promise<DetectionResult>}
  *
  * DetectionResult = scanner's ScanResult plus:
  * {
  *   mode, effectiveMode, aiAvailable, threshold,
- *   aiDetectionCount, filteredCount, filtered,
+ *   aiDetectionCount, filteredCount, filtered, hiddenBySeverity, minSeverity,
  *   injection: { score, label, isInjection, model } | null,
  * }
  */
@@ -116,6 +125,7 @@ async function runDetection(text, overrides = {}) {
   const mode = overrides.mode ?? settings.mode;
   const threshold = overrides.threshold ?? settings.threshold;
   const injectionCheck = overrides.injectionCheck ?? settings.injectionCheck;
+  const { mlOptions } = overrides;
 
   const { matches, patternCount } = await findMatches(text);
 
@@ -124,9 +134,9 @@ async function runDetection(text, overrides = {}) {
 
   // ML calls are independent, so run them side by side
   const [validation, detection, injection] = await Promise.allSettled([
-    wantValidation ? mlClient.validate(text, matches.map(({ category, match, start, end }) => ({ category, match, start, end }))) : null,
-    wantDetect ? mlClient.detect(text, { entities: mode === 'AI' ? 'all' : 'ai', threshold }) : null,
-    injectionCheck ? mlClient.injection(text) : null,
+    wantValidation ? mlClient.validate(text, matches.map(({ category, match, start, end }) => ({ category, match, start, end })), mlOptions) : null,
+    wantDetect ? mlClient.detect(text, { entities: mode === 'AI' ? 'all' : 'ai', threshold }, mlOptions) : null,
+    injectionCheck ? mlClient.injection(text, mlOptions) : null,
   ]);
 
   const failures = [validation, detection, injection].filter((s) => s.status === 'rejected');
@@ -153,7 +163,9 @@ async function runDetection(text, overrides = {}) {
     candidates.push(...valueOf(detection).entities.map(fromAiEntity));
   }
 
-  const detections = sortDetections(deduplicateMatches(candidates));
+  const deduped = sortDetections(deduplicateMatches(candidates));
+  const minSeverity = overrides.applySensitivity ? settings.minSeverity : DEFAULT_SETTINGS.minSeverity;
+  const detections = deduped.filter((d) => (SEVERITY_RANK[d.severity] ?? 1) >= SEVERITY_RANK[minSeverity]);
   const injectionResult = valueOf(injection);
 
   return {
@@ -169,6 +181,8 @@ async function runDetection(text, overrides = {}) {
     aiDetectionCount: detections.filter((d) => d.source === 'AI').length,
     filteredCount   : filtered.length,
     filtered,
+    hiddenBySeverity: deduped.length - detections.length,
+    minSeverity,
     injection       : injectionResult && {
       score      : injectionResult.score,
       label      : injectionResult.label,

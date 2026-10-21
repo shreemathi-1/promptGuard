@@ -1,0 +1,10 @@
+# What the test suite needs, without torch / transformers (CI-sized).
+# Tests start the API without loading models, and the detector tests use
+# spaCy's small model only:  python -m spacy download en_core_web_sm
+fastapi>=0.115
+pydantic>=2.7
+presidio-analyzer>=2.2.355
+spacy>=3.7,<4
+faker>=30
+pytest>=8
+httpx>=0.27

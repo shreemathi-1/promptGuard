@@ -60,3 +60,15 @@ def test_extend_person_span():
     assert text[:extend_person_span(text, 5)] == "Priya Sharma Rao"
     assert extend_person_span("Priya from Chennai", 5) == 5
     assert extend_person_span("Priya Aadhaar", 5) == 5
+
+
+def test_medical_term_needs_medical_context(detector):
+    # "stroke" in SVG code or "insulin" in a price list is not health data
+    assert "MEDICAL" not in categories(detector.detect('<line stroke="var(--grid)" strokeWidth={1} />'))
+    assert "MEDICAL" not in categories(detector.detect("Insulin pens are 20% off this week."))
+    assert "MEDICAL" in categories(detector.detect("Her father had a history of stroke."))
+
+
+def test_inflected_context_words_boost_medical_terms(detector):
+    # "diagnosed" is lemmatised to "diagnose" before context matching
+    assert "MEDICAL" in categories(detector.detect("He was diagnosed with tuberculosis in 2019."))

@@ -19,9 +19,10 @@ def test_chunking_covers_long_text():
     assert chunk_text("short") == ["short"]
 
 
-def test_model_alone_is_not_enough():
-    # The classifier scores "Order ID 1234 5678 9012 has shipped" at 0.996
-    assert combine_scores(0.996, heuristic=0.0) < INJECTION_THRESHOLD
+def test_model_alone_needs_high_confidence():
+    # Model-only scores are damped (cap 0.6): a confident model flags, a lukewarm one doesn't
+    assert combine_scores(0.996, heuristic=0.0) >= INJECTION_THRESHOLD
+    assert combine_scores(0.7, heuristic=0.0) < INJECTION_THRESHOLD
     assert combine_scores(0.99, heuristic=0.9) == 0.99
     assert combine_scores(None, heuristic=0.85) == 0.85
 

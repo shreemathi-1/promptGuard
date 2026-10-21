@@ -24,6 +24,9 @@ CONTEXT_BEFORE = 50   # chars inspected before the match
 CONTEXT_AFTER = 25    # chars inspected after the match
 CONTEXT_BOOST = 0.30
 NEGATIVE_PENALTY = 0.25
+# A negative cue only counts right before the value ("order 1234 …", "tracking
+# number 1234 …"), not anywhere in the sentence ("Summarise this ticket: Ravi (98765 43210)")
+NEGATIVE_WORDS = 2
 CHECKSUM_PASS = 0.90
 CHECKSUM_FAIL = 0.10
 DEFAULT_BASE = 0.75   # custom / unknown categories: trust the user's rule
@@ -256,7 +259,8 @@ def assess_hit(text: str, category: str, match: str, start: int, end: int) -> As
     window = f"{before} {after}"
 
     positive = _find_keywords(window, rule.context)
-    negative = _find_keywords(before, rule.negative_context)
+    preceding = " ".join(re.findall(r"[a-z0-9#/.]+", before)[-NEGATIVE_WORDS:])
+    negative = _find_keywords(preceding, rule.negative_context)
 
     confidence = result.confidence
     if positive:

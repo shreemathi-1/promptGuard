@@ -38,8 +38,8 @@ const labelStyle = {
 
 const EXAMPLE = {
   description : 'Internal employee IDs: EMP- followed by exactly 6 digits',
-  examples    : 'EMP-123456\nEMP-000981\nemp-554433',
-  negatives   : 'EMP-12345\nEMP-1234567\nTEMP-123456',
+  examples    : 'EMP-123456\nEMP-000981\nemp-554433', // promptguard:ignore
+  negatives   : 'EMP-12345\nEMP-1234567\nTEMP-123456', // promptguard:ignore
 };
 
 function lines(value) {
@@ -166,7 +166,7 @@ export default function RuleGenerator({ onUse }) {
             rows={4}
             value={examples}
             onChange={e => setExamples(e.target.value)}
-            placeholder={'One value per line\nEMP-123456'}
+            placeholder={'One value per line\nEMP-123456' /* promptguard:ignore */}
             style={{ ...inputStyle, fontFamily: 'var(--font-mono)', fontSize: 12 }}
             disabled={loading}
           />

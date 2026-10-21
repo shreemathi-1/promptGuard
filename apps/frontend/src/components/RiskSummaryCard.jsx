@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { fetchRiskSummary }    from '../api/client';
-import RiskScore               from './RiskScore';
 import { categoryIcon }        from '../constants/categories';
 
 /**
@@ -31,7 +30,6 @@ function TrendBar({ trend }) {
   if (!trend || trend.length === 0) return null;
 
   const maxScans = Math.max(...trend.map(d => d.scanCount), 1);
-  const maxRisk  = Math.max(...trend.map(d => d.avgRisk),   1);
 
   return (
     <div>
@@ -51,7 +49,7 @@ function TrendBar({ trend }) {
         gap        : 3,
         height     : 48,
       }}>
-        {trend.map((day, i) => {
+        {trend.map((day) => {
           const scanH = day.scanCount > 0
             ? Math.max(4, (day.scanCount / maxScans) * 40)
             : 0;

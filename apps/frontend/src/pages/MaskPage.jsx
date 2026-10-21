@@ -13,8 +13,8 @@ const EXAMPLES = [
   {
     label : 'Name + city + Aadhaar',
     text  :
-      'Patient Priya Sharma from Chennai was diagnosed with diabetes.\n' +
-      'Aadhaar on file: 2345 6789 0124.',
+      'Patient Priya Sharma from Chennai was diagnosed with diabetes.\n' + // promptguard:ignore
+      'Aadhaar on file: 2345 6789 0124.', // promptguard:ignore
   },
   {
     label : 'Card + SSN + Email',

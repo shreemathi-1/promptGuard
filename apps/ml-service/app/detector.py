@@ -98,12 +98,15 @@ MEDICAL_TERMS = [
     "anxiety disorder", "bipolar disorder", "schizophrenia", "PTSD", "ADHD", "autism",
     "tuberculosis", "hepatitis", "hepatitis B", "hepatitis C", "epilepsy", "dementia",
     "Alzheimer's", "Parkinson's", "multiple sclerosis", "stroke", "heart attack",
-    "heart disease", "kidney disease", "chronic kidney disease", "cirrhosis", "arthritis",
-    "thyroid", "hypothyroidism", "hyperthyroidism", "COVID-19", "chemotherapy", "dialysis",
-    "insulin", "antidepressants", "miscarriage", "infertility", "STD", "herpes",
+    "heart disease", "kidney disease", "chronic kidney disease", "cirrhosis", "arthritis",  # promptguard:ignore
+    "thyroid", "hypothyroidism", "hyperthyroidism", "COVID-19", "chemotherapy", "dialysis",  # promptguard:ignore
+    "insulin", "antidepressants", "miscarriage", "infertility", "STD", "herpes",  # promptguard:ignore
 ]
+# Presidio matches context against lemmas ("diagnosed" → "diagnose"), so the
+# base forms are listed too; without them "was diagnosed with X" gets no boost
 MEDICAL_CONTEXT = ["diagnosed", "suffering", "patient", "treatment", "medication",
-                   "prescribed", "condition", "disease", "history", "therapy"]
+                   "prescribed", "condition", "disease", "history", "therapy",
+                   "diagnose", "diagnosis", "suffer", "prescribe", "treat", "medicate"]
 
 
 def _nlp_configuration() -> dict:
@@ -139,7 +142,10 @@ class Detector:
             supported_entity="MEDICAL_CONDITION",
             name="MedicalConditionRecognizer",
             deny_list=MEDICAL_TERMS,
-            deny_list_score=0.6,
+            # Below the default 0.6 threshold on purpose: a term alone ("stroke" in
+            # SVG code, "insulin" in a pricing table) isn't health data. Presidio adds
+            # +0.35 when a context word ("diagnosed", "patient", …) precedes it → 0.75.
+            deny_list_score=0.4,
             context=MEDICAL_CONTEXT,
         ))
         registry.add_recognizer(PatternRecognizer(

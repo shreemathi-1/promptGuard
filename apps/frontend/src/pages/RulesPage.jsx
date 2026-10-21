@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   fetchRules,
   createRule,
@@ -401,26 +401,15 @@ export default function RulesPage() {
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
 
-  const loadRules = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Always fetch all rules; we filter client-side for search
-      // Always fetch all rules; client‑side filters handle everything
-      const data = await fetchRules();
-      setAllRules(data.rules);
-      console.log('Fetched rules', data.rules?.length ?? 0);
-    } catch (err) {
-      setError(err.message);
-      setAllRules([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters.category, filters.severity, filters.isActive, filters.isBuiltin]);
-
+  // All rules are fetched once; filters and search apply client-side
   useEffect(() => {
-    loadRules();
-  }, [loadRules]);
+    let current = true;
+    fetchRules()
+      .then((data) => { if (current) { setAllRules(data.rules); setError(null); } })
+      .catch((err) => { if (current) { setError(err.message); setAllRules([]); } })
+      .finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, []);
 
   // ── Client-side search filter ─────────────────────────────────────────────
 

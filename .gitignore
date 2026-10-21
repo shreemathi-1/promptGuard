@@ -31,3 +31,6 @@ pnpm-debug.log*
 !.vscode/extensions.json
 *.local
 *.sw?
+
+# Private reference docs (not pushed)
+internal-docs/

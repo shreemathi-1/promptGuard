@@ -109,6 +109,14 @@ export async function explainDetection(payload) {
   return res.data;
 }
 
+// ── Benchmark ─────────────────────────────────────────────────────────────
+
+/** Latest report written by eval/run_benchmark.py (404 until it has been run). */
+export async function fetchBenchmarkResults() {
+  const res = await http.get('/api/eval/results');
+  return res.data;
+}
+
 // ── Audit ─────────────────────────────────────────────────────────────────
 
 /**

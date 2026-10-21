@@ -54,6 +54,10 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       CORS_ORIGINS: http://localhost:5173
       ML_SERVICE_URL: http://ml-service:8000
+      EVAL_RESULTS_PATH: /app/eval/results/latest.json
+    volumes:
+      # Benchmark report for the Benchmark page (written by eval/run_benchmark.py)
+      - ./eval/results:/app/eval/results:ro
     ports:
       - "4000:4000"
     depends_on:

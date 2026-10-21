@@ -21,7 +21,7 @@ const EXAMPLES = [
     label : 'Email draft',
     text  :
       'Write a polite payment reminder to Priya Sharma in Chennai. Her card 4111 1111 1111 1111 ' +
-      'was declined and her Aadhaar 2345 6789 0124 is on file. Reply to priya.sharma@gmail.com.',
+      'was declined and her Aadhaar 2345 6789 0124 is on file. Reply to priya.sharma@gmail.com.', // promptguard:ignore
   },
   {
     label : 'Support ticket',

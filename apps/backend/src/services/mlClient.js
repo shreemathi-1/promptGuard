@@ -108,19 +108,22 @@ async function request(method, path, body, { timeoutMs = env.ml.timeoutMs, break
   return data;
 }
 
+// The optional last argument of detect / validate / injection is request()'s
+// options ({ timeoutMs, breaker }); batch scans of large files use it.
+
 /** Finds AI entities. entities: 'ai' (names, places, ...) | 'all' (also structured PII). */
-function detect(text, { entities = 'ai', threshold = 0.5 } = {}) {
-  return request('POST', '/detect', { text, entities, threshold });
+function detect(text, { entities = 'ai', threshold = 0.5 } = {}, opts) {
+  return request('POST', '/detect', { text, entities, threshold }, opts);
 }
 
 /** Scores regex hits: [{ category, match, start, end }] → { results: [{ index, confidence, checksum, reasons }] } */
-function validate(text, hits) {
-  return request('POST', '/validate', { text, hits });
+function validate(text, hits, opts) {
+  return request('POST', '/validate', { text, hits }, opts);
 }
 
 /** Prompt-injection probability → { score, label, isInjection, model } */
-function injection(text) {
-  return request('POST', '/injection', { text });
+function injection(text, opts) {
+  return request('POST', '/injection', { text }, opts);
 }
 
 /**

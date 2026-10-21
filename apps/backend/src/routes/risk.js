@@ -131,13 +131,14 @@ router.get('/summary', async (req, res, next) => {
     // ── Daily trend ───────────────────────────────────────────────────────
     const trendResult = await query(
       `SELECT
-         DATE(created_at)                        AS date,
+         -- A string, in UTC like the keys below (DATE() comes back as a JS Date)
+         TO_CHAR(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS date,
          COUNT(*)::integer                       AS scan_count,
          ROUND(AVG(risk_score)::numeric, 1)      AS avg_risk,
          COALESCE(SUM(detection_count), 0)::integer AS detection_count
        FROM audit_logs
        WHERE created_at >= $1
-       GROUP BY DATE(created_at)
+       GROUP BY 1
        ORDER BY date ASC`,
       [fromISO]
     );

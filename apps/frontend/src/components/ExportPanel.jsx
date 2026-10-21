@@ -36,7 +36,6 @@ export default function ExportPanel({ auditFilters = {} }) {
   const [format,          setFormat]          = useState('csv');
   const [limit,           setLimit]           = useState(1000);
   const [useFilters,      setUseFilters]      = useState(true);
-  const [loading,         setLoading]         = useState(false);
   const [columnsLoading,  setColumnsLoading]  = useState(true);
   const [downloading,     setDownloading]     = useState(false);
   const [lastExport,      setLastExport]      = useState(null);
@@ -75,8 +74,6 @@ export default function ExportPanel({ auditFilters = {} }) {
   }
 
   function selectDefault() {
-    const defaults = columns.filter(c => c.always || c.key.startsWith('created'))
-      .map(c => c.key);
     // Re-use the server defaults
     setSelectedColumns(columns.filter(c => c.always).map(c => c.key).concat(
       ['created_at', 'risk_score', 'detection_count', 'mask_style', 'categories']

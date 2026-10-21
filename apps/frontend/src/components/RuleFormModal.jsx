@@ -95,7 +95,6 @@ const inputStyle = {
   boxSizing    : 'border-box',
 };
 
-const inputFocusStyle = { borderColor: 'var(--color-primary)' };
 const inputErrorStyle = { borderColor: 'var(--color-danger)' };
 
 // ── Main modal ────────────────────────────────────────────────────────────────

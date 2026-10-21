@@ -1,17 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchAuditLogs }    from '../api/client';
 import PageHeader            from '../components/PageHeader';
 import RiskScore             from '../components/RiskScore';
 import Pagination            from '../components/Pagination';
 import AuditDetailDrawer     from '../components/AuditDetailDrawer';
 import ExportPanel from '../components/ExportPanel';
+import { FILTER_CATEGORIES } from '../constants/categories';
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  'CREDIT_CARD', 'SSN', 'PHONE', 'EMAIL',
-  'BANK_ACCOUNT', 'PASSPORT', 'API_KEY', 'CUSTOM',
-];
 
 const MASK_STYLES = ['REDACT', 'PARTIAL', 'TOKENIZE'];
 
@@ -68,7 +64,7 @@ function FilterBar({ filters, onChange, onReset, loading }) {
         disabled={loading}
       >
         <option value="">All categories</option>
-        {CATEGORIES.map(c => (
+        {FILTER_CATEGORIES.map(c => (
           <option key={c} value={c}>{c}</option>
         ))}
       </select>
@@ -281,34 +277,31 @@ const DEFAULT_FILTERS = {
 
 export default function AuditPage() {
   const [filters,        setFilters]        = useState(DEFAULT_FILTERS);
-  const [records,        setRecords]        = useState([]);
-  const [pagination,     setPagination]     = useState(null);
-  const [loading,        setLoading]        = useState(false);
-  const [error,          setError]          = useState(null);
+  const [reloadCount,    setReloadCount]    = useState(0);
+  // The last response, tagged with the request it answers
+  const [loaded,         setLoaded]         = useState({ key: null, records: [], pagination: null, error: null });
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showExport, setShowExport] = useState(false);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
 
-  const fetchRecords = useCallback(async (params) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchAuditLogs(params);
-      setRecords(data.records);
-      setPagination(data.pagination);
-    } catch (err) {
-      setError(err.message);
-      setRecords([]);
-      setPagination(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const requestKey = `${JSON.stringify(filters)}#${reloadCount}`;
 
   useEffect(() => {
-    fetchRecords(filters);
-  }, [filters, fetchRecords]);
+    let current = true;   // a newer request makes this response stale
+    fetchAuditLogs(filters)
+      .then((data) => {
+        if (current) setLoaded({ key: requestKey, records: data.records, pagination: data.pagination, error: null });
+      })
+      .catch((err) => {
+        if (current) setLoaded({ key: requestKey, records: [], pagination: null, error: err.message });
+      });
+    return () => { current = false; };
+  }, [filters, reloadCount, requestKey]);
+
+  const loading    = loaded.key !== requestKey;
+  const { records, pagination, error } = loaded;
+  const reload     = () => setReloadCount((n) => n + 1);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -361,7 +354,7 @@ export default function AuditPage() {
           <button
             className="btn btn-ghost"
             style={{ fontSize: 12, padding: '6px 12px' }}
-            onClick={() => fetchRecords(filters)}
+            onClick={reload}
             disabled={loading}
           >
             {loading ? 'Loading…' : '↻ Refresh'}
@@ -381,7 +374,7 @@ export default function AuditPage() {
 <button
   className="btn btn-ghost"
   style={{ fontSize: 12, padding: '6px 12px' }}
-  onClick={() => fetchRecords(filters)}
+  onClick={reload}
   disabled={loading}
 >
   {loading ? 'Loading…' : '↻ Refresh'}

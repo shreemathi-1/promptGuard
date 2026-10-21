@@ -79,36 +79,42 @@ const SEVERITY_RANK = {
   LOW: 1,
 };
 
+// Rule matches (REGEX, or HYBRID = regex verified by ML) are more specific than
+// AI entity guesses: NER often tags "IFSC ICIC0896383" as an ORGANIZATION (promptguard:ignore)
+const SOURCE_RANK = { HYBRID: 2, REGEX: 2, AI: 1 };
+
 /**
  * Deduplicates overlapping matches.
- * If two matches overlap in position, keeps the higher-severity one
- * (ties go to the higher confidence, when detections carry one).
+ *
+ * Matches are taken in priority order and each one is kept only if it doesn't
+ * overlap anything already kept. Priority:
+ *   1. rule-based over AI entity       (the IFSC code, not "IFSC ICIC0896383" as an ORG) (promptguard:ignore)
+ *   2. longer span                     (the phone "+91-8994717464", not the
+ *                                       account-number-shaped digits inside it)
+ *   3. higher severity, then higher confidence
+ *
  * @param {Array} matches - Raw match array
- * @returns {Array} - Deduplicated matches
+ * @returns {Array} - Deduplicated matches, in position order
  */
 function deduplicateMatches(matches) {
   if (matches.length === 0) return [];
 
-  // Sort by start index, then by severity descending, then by confidence descending
-  const sorted = [...matches].sort((a, b) => {
-    if (a.start !== b.start) return a.start - b.start;
-    const rankDiff = (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0);
-    if (rankDiff !== 0) return rankDiff;
-    return (b.confidence ?? 0) - (a.confidence ?? 0);
-  });
+  const byPriority = [...matches].sort((a, b) =>
+    (SOURCE_RANK[b.source] ?? 2) - (SOURCE_RANK[a.source] ?? 2)
+    || (b.end - b.start) - (a.end - a.start)
+    || (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0)
+    || (b.confidence ?? 0) - (a.confidence ?? 0)
+    || a.start - b.start
+  );
 
-  const deduped = [];
-  let lastEnd = -1;
-
-  for (const match of sorted) {
-    if (match.start >= lastEnd) {
-      deduped.push(match);
-      lastEnd = match.end;
+  const kept = [];
+  for (const match of byPriority) {
+    if (!kept.some((k) => match.start < k.end && k.start < match.end)) {
+      kept.push(match);
     }
-    // Overlapping match — skip (lower severity or same position)
   }
 
-  return deduped;
+  return kept.sort((a, b) => a.start - b.start);
 }
 
 /**

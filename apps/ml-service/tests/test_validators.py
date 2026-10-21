@@ -82,3 +82,12 @@ def test_api_key_entropy_and_negative_context():
 
 def test_custom_category_trusted():
     assert score("EMP-00123", "CUSTOM", "EMP-00123").confidence == 0.75
+
+
+def test_negative_context_only_counts_right_before_the_value():
+    # "ticket" describes the document, not the number
+    far = score("Summarise this ticket: Tara Dhar (+91-8994717464) says hi", "PHONE", "+91-8994717464")
+    near = score("Ticket 360-420-5116 was closed", "PHONE", "360-420-5116")
+    assert far.confidence >= 0.6 and "negative_context:ticket" not in far.reasons
+    assert near.confidence < 0.6
+    assert score("Tracking number 2345 6789 0123 shipped", "AADHAAR", "2345 6789 0123").confidence < 0.5

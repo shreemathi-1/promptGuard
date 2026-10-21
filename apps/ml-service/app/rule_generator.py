@@ -11,7 +11,7 @@ The local LLM proposes a pattern; this module never trusts it blindly:
              "should not match" example may be matched at all
 
 Small local models are unreliable at regex, so a deterministic step helps:
-the examples' structure is analysed ("EMP-123456" → letters, "-", 6 digits)
+the examples' structure is analysed ("INV-123456" → letters, "-", 6 digits)
 into a candidate pattern. The LLM gets it as a starting hint and competes
 with it; the best-tested candidate wins (the LLM on ties, since it read the
 description). With Ollama down, the inferred pattern is still returned.
@@ -264,8 +264,8 @@ def _separator(options: set[str]) -> Optional[str]:
 def infer_pattern(positives: list[str]) -> Optional[str]:
     r"""
     A regex from the examples' shared shape, or None when they don't share one.
-    Letter runs that are identical in every example stay literal (the "EMP" in
-    EMP-123456); others become [A-Z]{n,m}. Digit runs become \d{n,m}.
+    Letter runs that are identical in every example stay literal (the "INV" in
+    INV-123456); others become [A-Z]{n,m}. Digit runs become \d{n,m}.
     """
     try:
         parsed = [_runs(p.strip()) for p in positives if p.strip()]

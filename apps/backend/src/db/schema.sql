@@ -71,7 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_scan_patterns_is_active
 -- ============================================================
 INSERT INTO settings (key, value, description) VALUES
   ('mask_style',        'REDACT',  'Default masking style: REDACT | PARTIAL | TOKENIZE'),
-  ('sensitivity_level', 'HIGH',    'Detection sensitivity: LOW | MEDIUM | HIGH'),
+  ('sensitivity_level', 'LOW',     'Lowest severity shown in Scan results: LOW | MEDIUM | HIGH | CRITICAL'),
   ('log_input_text',    'true',    'Whether to store raw input text in audit logs')
 ON CONFLICT (key) DO NOTHING;
 

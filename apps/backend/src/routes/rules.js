@@ -303,7 +303,7 @@ router.post(
 //
 // Body:
 // {
-//   description: string           e.g. "Internal employee IDs like EMP-123456"
+//   description: string           e.g. "Internal employee IDs like EMP-123456" (promptguard:ignore)
 //   examples:    string[]         values that must match (1–20)
 //   negatives?:  string[]         text that must not match
 //   category?:   string           force a category

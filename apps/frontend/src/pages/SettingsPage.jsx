@@ -36,12 +36,12 @@ const SETTING_META = {
   sensitivity_level: {
     label   : 'Detection Sensitivity',
     icon    : '🎯',
-    hint    : 'Sets the minimum severity level included in scan results.',
+    hint    : 'Lowest severity shown on the Scan page. Mask and Smart Rewrite always cover every finding.',
     options : [
       {
         value       : 'LOW',
-        label       : 'Low',
-        description : 'Report all detections including emails and phone numbers',
+        label       : 'Low (default)',
+        description : 'Show every detection, including emails and places',
         example     : 'LOW · MEDIUM · HIGH · CRITICAL',
       },
       {
@@ -52,7 +52,7 @@ const SETTING_META = {
       },
       {
         value       : 'HIGH',
-        label       : 'High (default)',
+        label       : 'High',
         description : 'Only report HIGH and CRITICAL detections',
         example     : 'HIGH · CRITICAL',
       },
@@ -154,18 +154,6 @@ const SETTING_META = {
   },
 };
 
-// ── Helper: severity colour ───────────────────────────────────────────────────
-
-function severityColor(level) {
-  const map = {
-    CRITICAL : 'var(--color-danger)',
-    HIGH     : '#f97316',
-    MEDIUM   : 'var(--color-warning)',
-    LOW      : 'var(--color-success)',
-  };
-  return map[level] ?? 'var(--color-muted)';
-}
-
 // ── Option card (radio-style) ─────────────────────────────────────────────────
 
 function OptionCard({ option, selected, onChange, disabled }) {
@@ -231,14 +219,17 @@ function SettingCard({ settingKey, setting, onSave }) {
   const meta = SETTING_META[settingKey];
 
   const [localValue, setLocalValue] = useState(setting.value);
+  const [syncedFrom, setSyncedFrom] = useState(setting.value);
   const [saving,     setSaving]     = useState(false);
   const [saveError,  setSaveError]  = useState(null);
   const [savedAt,    setSavedAt]    = useState(null);
 
-  // Sync if parent setting changes (e.g. after initial load)
-  useEffect(() => {
+  // Follow the server value when it changes (e.g. after a reset). Adjusting
+  // state during render is React's recommended alternative to an effect here.
+  if (setting.value !== syncedFrom) {
+    setSyncedFrom(setting.value);
     setLocalValue(setting.value);
-  }, [setting.value]);
+  }
 
   const isDirty = localValue !== setting.value;
 
@@ -573,7 +564,7 @@ function DangerZoneCard({ onResetSettings }) {
             Reset settings to defaults
           </div>
           <div style={{ fontSize: 12, color: 'var(--color-muted)', lineHeight: 1.5 }}>
-            Restores mask_style → REDACT, sensitivity_level → HIGH,
+            Restores mask_style → REDACT, sensitivity_level → LOW,
             log_input_text → true.
           </div>
         </div>
@@ -635,26 +626,28 @@ export default function SettingsPage() {
 
   // ── Fetch settings ────────────────────────────────────────────────────────
 
-  const loadSettings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchSettings();
-      const map  = {};
+  // State is only set in the promise callbacks, so the effect can call this
+  const fetchInto = useCallback(() => fetchSettings()
+    .then((data) => {
+      const map = {};
       for (const s of data.settings) {
         map[s.key] = s;
       }
       setSettings(map);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      setError(null);
+    })
+    .catch((err) => setError(err.message))
+    .finally(() => setLoading(false)), []);
+
+  // From buttons (Retry, after a reset): show the loading state first
+  const loadSettings = useCallback(() => {
+    setLoading(true);
+    return fetchInto();
+  }, [fetchInto]);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    fetchInto();
+  }, [fetchInto]);
 
   // ── Save handler ──────────────────────────────────────────────────────────
 
@@ -671,7 +664,7 @@ export default function SettingsPage() {
   async function handleResetSettings() {
     const defaults = {
       mask_style       : 'REDACT',
-      sensitivity_level: 'HIGH',
+      sensitivity_level: 'LOW',
       log_input_text   : 'true',
     };
 

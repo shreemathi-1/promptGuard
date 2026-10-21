@@ -205,3 +205,13 @@ def test_name_parts_are_unique_across_people():
     a = s.fake_for("PERSON", "Priya Sharma", text)
     b = s.fake_for("PERSON", "Rahul Verma", text)
     assert not set(a.split()) & set(b.split())
+
+
+@pytest.mark.parametrize("_", range(20))
+def test_fake_email_is_a_real_looking_address(_):
+    # Shared domain words (gmail, com) must not force the last-resort fallback
+    s = Session(id="t")
+    text = "Reply to priya.sharma@gmail.com today"
+    fake = s.fake_for("EMAIL", "priya.sharma@gmail.com", text)
+    assert re.fullmatch(r"[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}", fake), fake
+    assert "priya" not in fake and "sharma" not in fake

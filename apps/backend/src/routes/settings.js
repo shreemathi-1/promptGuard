@@ -15,7 +15,7 @@ const SETTINGS_REGISTRY = {
     type         : 'enum',
   },
   sensitivity_level: {
-    description  : 'Controls which severity levels are included in scan results',
+    description  : 'Lowest severity shown in Scan results (LOW shows everything). Mask and Smart Rewrite always cover every finding',
     allowedValues: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
     type         : 'enum',
   },

@@ -105,7 +105,17 @@ const BUILTIN_PATTERNS = [
   {
     name: 'US Phone Number',
     description: 'US phone number in various formats',
-    pattern: '\\b(?:\\+1[\\s\\-]?)?(?:\\([0-9]{3}\\)|[0-9]{3})[\\s\\-]?[0-9]{3}[\\s\\-]?[0-9]{4}\\b',
+    // \b sits inside the second branch: there is no word boundary before "(",
+    // so a leading \b made "(415) 555-0198" impossible to match
+    pattern: '(?:\\+1[\\s\\-]?)?(?:\\([0-9]{3}\\)|\\b[0-9]{3})[\\s\\-]?[0-9]{3}[\\s\\-]?[0-9]{4}\\b',
+    category: 'PHONE',
+    severity: 'MEDIUM',
+    is_builtin: true,
+  },
+  {
+    name: 'Indian Mobile Number',
+    description: 'Indian 10-digit mobile number without country code (starts with 6–9)',
+    pattern: '\\b[6-9][0-9]{4}[\\s\\-]?[0-9]{5}\\b',
     category: 'PHONE',
     severity: 'MEDIUM',
     is_builtin: true,

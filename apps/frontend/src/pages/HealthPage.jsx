@@ -20,7 +20,7 @@ function Row({ label, children }) {
 }
 
 export default function HealthPage() {
-  const { health, loading, error, refresh } = useHealth(30_000);
+  const { health, loading, error } = useHealth(30_000);
 
   return (
     <div>
