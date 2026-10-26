@@ -1,0 +1,121 @@
+{
+  "name": "promptguard",
+  "displayName": "PromptGuard",
+  "description": "Find and mask secrets and PII in your code and prompts before they reach an AI chatbot or a git commit",
+  "version": "1.0.0",
+  "publisher": "promptguard",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": ["Linters", "Other", "AI"],
+  "keywords": ["secrets", "pii", "dlp", "security", "pre-commit", "llm"],
+  "main": "./src/extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "commands": [
+      { "command": "promptguard.scanFile", "title": "Scan Current File", "category": "PromptGuard", "icon": "$(shield)" },
+      { "command": "promptguard.scanSelection", "title": "Scan Selection", "category": "PromptGuard" },
+      { "command": "promptguard.maskSelection", "title": "Mask Selection", "category": "PromptGuard" },
+      { "command": "promptguard.copyMasked", "title": "Copy Masked", "category": "PromptGuard" },
+      { "command": "promptguard.rewriteSelection", "title": "Smart Rewrite Selection (copy for a chatbot)", "category": "PromptGuard" },
+      { "command": "promptguard.restoreReply", "title": "Restore Chatbot Reply", "category": "PromptGuard" },
+      { "command": "promptguard.scanWorkspace", "title": "Scan Workspace", "category": "PromptGuard", "icon": "$(search)" },
+      { "command": "promptguard.scanStaged", "title": "Scan Staged Files", "category": "PromptGuard", "icon": "$(shield)" },
+      { "command": "promptguard.installHook", "title": "Install Pre-commit Hook", "category": "PromptGuard" },
+      { "command": "promptguard.uninstallHook", "title": "Uninstall Pre-commit Hook", "category": "PromptGuard" },
+      { "command": "promptguard.generateRule", "title": "Generate Rule from Selection", "category": "PromptGuard" },
+      { "command": "promptguard.clearFindings", "title": "Clear Findings", "category": "PromptGuard", "icon": "$(clear-all)" },
+      { "command": "promptguard.showStatus", "title": "Show Status", "category": "PromptGuard" }
+    ],
+    "keybindings": [
+      { "command": "promptguard.copyMasked", "key": "ctrl+alt+c", "mac": "cmd+alt+c", "when": "editorTextFocus" }
+    ],
+    "menus": {
+      "editor/context": [
+        { "command": "promptguard.copyMasked", "group": "9_promptguard@1" },
+        { "command": "promptguard.maskSelection", "when": "editorHasSelection", "group": "9_promptguard@2" },
+        { "command": "promptguard.rewriteSelection", "when": "editorHasSelection", "group": "9_promptguard@3" },
+        { "command": "promptguard.scanSelection", "when": "editorHasSelection", "group": "9_promptguard@4" },
+        { "command": "promptguard.generateRule", "when": "editorHasSelection", "group": "9_promptguard@5" }
+      ],
+      "scm/title": [
+        { "command": "promptguard.scanStaged", "when": "scmProvider == git", "group": "navigation" }
+      ],
+      "view/title": [
+        { "command": "promptguard.scanWorkspace", "when": "view == promptguard.findings", "group": "navigation@1" },
+        { "command": "promptguard.clearFindings", "when": "view == promptguard.findings", "group": "navigation@2" }
+      ]
+    },
+    "views": {
+      "explorer": [
+        { "id": "promptguard.findings", "name": "PromptGuard Findings" }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "promptguard.findings",
+        "contents": "No findings. Files are scanned when you save them.\n[Scan Workspace](command:promptguard.scanWorkspace)\n[Scan Staged Files](command:promptguard.scanStaged)"
+      }
+    ],
+    "configuration": {
+      "title": "PromptGuard",
+      "properties": {
+        "promptguard.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:4000",
+          "markdownDescription": "URL of the PromptGuard backend. Rules, AI detection and the audit log all live there."
+        },
+        "promptguard.detectionMode": {
+          "type": "string",
+          "enum": ["", "REGEX", "AI", "HYBRID"],
+          "enumDescriptions": ["Use the server's setting", "Regex rules only", "AI models only", "Rules verified by AI, plus AI entities"],
+          "default": "",
+          "description": "Detection engine for scans."
+        },
+        "promptguard.scanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan files when they are saved and show findings in the Problems panel."
+        },
+        "promptguard.minimumSeverity": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+          "default": "MEDIUM",
+          "description": "Findings below this severity are not shown as problems."
+        },
+        "promptguard.maskStyle": {
+          "type": "string",
+          "enum": ["REDACT", "PARTIAL", "TOKENIZE"],
+          "default": "REDACT",
+          "description": "How Mask Selection and Copy Masked replace sensitive values."
+        },
+        "promptguard.hookFailOn": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+          "default": "HIGH",
+          "description": "The pre-commit hook blocks commits with findings at or above this severity."
+        },
+        "promptguard.chat.blockInjection": {
+          "type": "boolean",
+          "default": true,
+          "description": "@promptguard refuses to forward prompts that look like prompt-injection attempts."
+        }
+      }
+    },
+    "chatParticipants": [
+      {
+        "id": "promptguard.chat",
+        "name": "promptguard",
+        "fullName": "PromptGuard",
+        "description": "Masks secrets and PII and checks for prompt injection before asking the model",
+        "isSticky": true
+      }
+    ]
+  },
+  "scripts": {
+    "test": "node --test test/unit/*.test.js",
+    "test:integration": "node test/integration/run.js",
+    "package": "node scripts/package.js"
+  }
+}

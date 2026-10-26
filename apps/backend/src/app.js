@@ -1,0 +1,70 @@
+const express = require('express');
+const cors    = require('cors');
+const helmet  = require('helmet');
+const morgan  = require('morgan');
+const env     = require('./config/env');
+const { testConnection } = require('./config/db');
+const healthRouter   = require('./routes/health');
+const scanRouter     = require('./routes/scan');
+const maskRouter     = require('./routes/mask');
+const auditRouter    = require('./routes/audit');
+const rulesRouter    = require('./routes/rules');
+const riskRouter     = require('./routes/risk');
+const exportRouter   = require('./routes/export');
+const settingsRouter = require('./routes/settings');
+const aiRouter       = require('./routes/ai');
+const evalRouter     = require('./routes/eval');
+
+const app = express();
+
+app.use(helmet());
+app.use(cors({ origin: env.corsOrigins }));
+app.use(morgan('dev'));
+// Batch scans carry whole files; everything else keeps the small default limit
+app.use('/api/scan/batch', express.json({ limit: '6mb' }));
+app.use(express.json());
+
+// Routes
+app.use('/api/health',   healthRouter);
+app.use('/api/scan',     scanRouter);
+app.use('/api/mask',     maskRouter);
+app.use('/api/audit',    auditRouter);
+app.use('/api/rules',    rulesRouter);
+app.use('/api/risk',     riskRouter);
+app.use('/api/export',   exportRouter);
+app.use('/api/settings', settingsRouter);
+app.use('/api/ai',       aiRouter);
+app.use('/api/eval',     evalRouter);
+
+app.get('/', (req, res) => {
+  res.json({ success: true, data: { message: 'DLP API is running' } });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: 'Route not found' });
+});
+
+app.use((err, req, res, next) => {
+  // Client errors from middleware (body too large → 413, malformed JSON → 400)
+  // keep their status; body-parser marks their messages safe to show (expose)
+  const status = err.status ?? err.statusCode;
+  if (status >= 400 && status < 500) {
+    return res.status(status).json({ success: false, error: err.expose ? err.message : 'Bad request' });
+  }
+  console.error(err.stack);
+  res.status(500).json({ success: false, error: 'Internal server error' });
+});
+
+async function start() {
+  await testConnection();
+  app.listen(env.port, () => {
+    console.log(`[DLP] Backend running on http://localhost:${env.port}`);
+  });
+}
+
+// Only listen when run directly, so tests can import the app
+if (require.main === module) {
+  start();
+}
+
+module.exports = app;

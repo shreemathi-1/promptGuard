@@ -1,0 +1,19 @@
+{
+  "name": "promptguard-cli",
+  "version": "1.0.0",
+  "description": "Scan files for secrets and PII with PromptGuard, and block commits that contain them",
+  "license": "MIT",
+  "bin": {
+    "promptguard": "bin/promptguard.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

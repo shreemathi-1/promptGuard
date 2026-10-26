@@ -1,0 +1,1005 @@
+{
+  "generatedAt": "2026-10-21T17:39:05+00:00",
+  "dataset": {
+    "path": "eval/data/dataset.jsonl",
+    "records": 454,
+    "entities": 658,
+    "sha256": "ca21a303ad73",
+    "groups": {
+      "pii": 260,
+      "hard_negative": 70,
+      "clean": 20,
+      "injection": 74,
+      "benign": 30
+    },
+    "partial": false
+  },
+  "config": {
+    "api": "http://localhost:4000",
+    "aiConfidenceThreshold": 0.6,
+    "models": {
+      "detector": "dslim/bert-base-NER",
+      "injection": "protectai/deberta-v3-base-prompt-injection-v2"
+    },
+    "modes": [
+      "REGEX",
+      "AI",
+      "HYBRID"
+    ]
+  },
+  "modes": {
+    "REGEX": {
+      "lenient": {
+        "precision": 0.7875,
+        "recall": 0.4225,
+        "f1": 0.55,
+        "tp": 278,
+        "fp": 75,
+        "fn": 380
+      },
+      "strict": {
+        "precision": 0.7875,
+        "recall": 0.4225,
+        "f1": 0.55,
+        "tp": 278,
+        "fp": 75,
+        "fn": 380
+      },
+      "macroF1": 0.569,
+      "byCategory": {
+        "AADHAAR": {
+          "precision": 0.62,
+          "recall": 1.0,
+          "f1": 0.7654,
+          "tp": 31,
+          "fp": 19,
+          "fn": 0,
+          "support": 31
+        },
+        "API_KEY": {
+          "precision": 0.7143,
+          "recall": 0.5769,
+          "f1": 0.6383,
+          "tp": 15,
+          "fp": 6,
+          "fn": 11,
+          "support": 26
+        },
+        "BANK_ACCOUNT": {
+          "precision": 0.7381,
+          "recall": 0.8611,
+          "f1": 0.7949,
+          "tp": 31,
+          "fp": 11,
+          "fn": 5,
+          "support": 36
+        },
+        "CREDIT_CARD": {
+          "precision": 0.6667,
+          "recall": 1.0,
+          "f1": 0.8,
+          "tp": 30,
+          "fp": 15,
+          "fn": 0,
+          "support": 30
+        },
+        "DATE_OF_BIRTH": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 26,
+          "support": 26
+        },
+        "EMAIL": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 49,
+          "fp": 0,
+          "fn": 0,
+          "support": 49
+        },
+        "IFSC": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 18,
+          "fp": 0,
+          "fn": 0,
+          "support": 18
+        },
+        "IP_ADDRESS": {
+          "precision": 0.7391,
+          "recall": 1.0,
+          "f1": 0.85,
+          "tp": 34,
+          "fp": 12,
+          "fn": 0,
+          "support": 34
+        },
+        "LOCATION": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 74,
+          "support": 74
+        },
+        "MEDICAL": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 35,
+          "support": 35
+        },
+        "ORGANIZATION": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 42,
+          "support": 42
+        },
+        "PAN": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 17,
+          "fp": 0,
+          "fn": 0,
+          "support": 17
+        },
+        "PERSON": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 187,
+          "support": 187
+        },
+        "PHONE": {
+          "precision": 0.88,
+          "recall": 1.0,
+          "f1": 0.9362,
+          "tp": 44,
+          "fp": 6,
+          "fn": 0,
+          "support": 44
+        },
+        "SSN": {
+          "precision": 0.6,
+          "recall": 1.0,
+          "f1": 0.75,
+          "tp": 9,
+          "fp": 6,
+          "fn": 0,
+          "support": 9
+        }
+      },
+      "hardNegatives": {
+        "fpRate": 1.0,
+        "flagged": 70,
+        "total": 70,
+        "byKind": {
+          "bad_card": {
+            "flagged": 14,
+            "total": 14
+          },
+          "git_sha": {
+            "flagged": 6,
+            "total": 6
+          },
+          "order_id": {
+            "flagged": 14,
+            "total": 14
+          },
+          "sku": {
+            "flagged": 6,
+            "total": 6
+          },
+          "ticket": {
+            "flagged": 6,
+            "total": 6
+          },
+          "timestamp": {
+            "flagged": 6,
+            "total": 6
+          },
+          "txn": {
+            "flagged": 6,
+            "total": 6
+          },
+          "version": {
+            "flagged": 12,
+            "total": 12
+          }
+        }
+      },
+      "cleanFpRate": 0.0,
+      "latencyMs": {
+        "p50": 0.6,
+        "p95": 0.7,
+        "mean": 0.6,
+        "serverP50": 0.0
+      },
+      "fallbacks": 0,
+      "errors": {
+        "falseNegatives": [
+          {
+            "id": "pii-0001",
+            "category": "PERSON",
+            "text": "Write a polite payment reminder to ⟦Benjamin Horton⟧ in Nagpur. Their card 5121 8196 0013 38…"
+          },
+          {
+            "id": "pii-0001",
+            "category": "LOCATION",
+            "text": "… payment reminder to Benjamin Horton in ⟦Nagpur⟧. Their card 5121 8196 0013 3892 was dec…"
+          },
+          {
+            "id": "pii-0002",
+            "category": "PERSON",
+            "text": "Summarise this ticket: ⟦Anvi Konda⟧ (360-420-5116) says the refund to accou…"
+          },
+          {
+            "id": "pii-0004",
+            "category": "PERSON",
+            "text": "…tlook.com confirming the interview with ⟦Douglas Ford⟧ on Monday."
+          },
+          {
+            "id": "pii-0005",
+            "category": "PERSON",
+            "text": "Patient ⟦Emily Mcguire⟧, born on 26/04/1974, was diagnosed with…"
+          },
+          {
+            "id": "pii-0005",
+            "category": "DATE_OF_BIRTH",
+            "text": "Patient Emily Mcguire, born on ⟦26/04/1974⟧, was diagnosed with celiac disease last…"
+          },
+          {
+            "id": "pii-0005",
+            "category": "MEDICAL",
+            "text": "… born on 26/04/1974, was diagnosed with ⟦celiac disease⟧ last year. Suggest a diet plan."
+          },
+          {
+            "id": "pii-0006",
+            "category": "API_KEY",
+            "text": "Our AWS key ⟦g\u0068p_ren68K4TunPFz46PDjqipVJIqVLB5LzxoiGF⟧ stopped working after the deploy. What …"
+          },
+          {
+            "id": "pii-0007",
+            "category": "LOCATION",
+            "text": "….40 time out from the office network in ⟦Paris⟧?"
+          },
+          {
+            "id": "pii-0008",
+            "category": "PERSON",
+            "text": "Translate to Hindi: ⟦Tyrone Smith⟧ will transfer the deposit to IBAN 69784…"
+          }
+        ],
+        "falsePositives": [
+          {
+            "id": "pii-0080",
+            "category": "AADHAAR",
+            "text": "…ormally: hey Ishwar Yadav, pls pay into ⟦328588424745⟧ using IFSC SBIN0712368 asap"
+          },
+          {
+            "id": "pii-0102",
+            "category": "AADHAAR",
+            "text": "…C ICIC0297516 valid for NEFT to account ⟦696816453521⟧?"
+          },
+          {
+            "id": "pii-0128",
+            "category": "AADHAAR",
+            "text": "…erjee will transfer the deposit to IBAN ⟦845115447962⟧ by Friday."
+          },
+          {
+            "id": "pii-0182",
+            "category": "CREDIT_CARD",
+            "text": "…0) 349-0489) says the refund to account ⟦4235369378547772⟧ never arrived."
+          },
+          {
+            "id": "pii-0200",
+            "category": "AADHAAR",
+            "text": "…mally: hey Ikshita Biswas, pls pay into ⟦459375265479⟧ using IFSC HDFC0564651 asap"
+          },
+          {
+            "id": "hard_negative-0001",
+            "category": "AADHAAR",
+            "text": "Your order ⟦7939 1725 1355⟧ has shipped and will arrive on Friday."
+          },
+          {
+            "id": "hard_negative-0002",
+            "category": "AADHAAR",
+            "text": "Tracking number ⟦3570 4331 5410⟧ — please allow 3 to 5 days for delivery…"
+          },
+          {
+            "id": "hard_negative-0003",
+            "category": "CREDIT_CARD",
+            "text": "Invoice ⟦4676-2676-5861-7932⟧ is attached; the total is due next week…"
+          },
+          {
+            "id": "hard_negative-0004",
+            "category": "CREDIT_CARD",
+            "text": "Reference ⟦4104-0541-1526-2181⟧ was used for the bulk purchase order."
+          },
+          {
+            "id": "hard_negative-0005",
+            "category": "BANK_ACCOUNT",
+            "text": "The event fired at timestamp ⟦1795346867021⟧ according to the logs."
+          }
+        ],
+        "falseNegativeCount": 380,
+        "falsePositiveCount": 75
+      }
+    },
+    "AI": {
+      "lenient": {
+        "precision": 0.8584,
+        "recall": 0.7553,
+        "f1": 0.8036,
+        "tp": 497,
+        "fp": 82,
+        "fn": 161
+      },
+      "strict": {
+        "precision": 0.8411,
+        "recall": 0.7401,
+        "f1": 0.7874,
+        "tp": 487,
+        "fp": 92,
+        "fn": 171
+      },
+      "macroF1": 0.6166,
+      "byCategory": {
+        "AADHAAR": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 31,
+          "support": 31
+        },
+        "API_KEY": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 26,
+          "support": 26
+        },
+        "BANK_ACCOUNT": {
+          "precision": 1.0,
+          "recall": 0.5556,
+          "f1": 0.7143,
+          "tp": 20,
+          "fp": 0,
+          "fn": 16,
+          "support": 36
+        },
+        "CREDIT_CARD": {
+          "precision": 0.9677,
+          "recall": 1.0,
+          "f1": 0.9836,
+          "tp": 30,
+          "fp": 1,
+          "fn": 0,
+          "support": 30
+        },
+        "DATE_OF_BIRTH": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 26,
+          "fp": 0,
+          "fn": 0,
+          "support": 26
+        },
+        "EMAIL": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 49,
+          "fp": 0,
+          "fn": 0,
+          "support": 49
+        },
+        "IFSC": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 18,
+          "support": 18
+        },
+        "IP_ADDRESS": {
+          "precision": 0.7391,
+          "recall": 1.0,
+          "f1": 0.85,
+          "tp": 34,
+          "fp": 12,
+          "fn": 0,
+          "support": 34
+        },
+        "LOCATION": {
+          "precision": 0.869,
+          "recall": 0.9865,
+          "f1": 0.9241,
+          "tp": 73,
+          "fp": 11,
+          "fn": 1,
+          "support": 74
+        },
+        "MEDICAL": {
+          "precision": 1.0,
+          "recall": 0.8,
+          "f1": 0.8889,
+          "tp": 28,
+          "fp": 0,
+          "fn": 7,
+          "support": 35
+        },
+        "ORGANIZATION": {
+          "precision": 0.4194,
+          "recall": 0.9286,
+          "f1": 0.5778,
+          "tp": 39,
+          "fp": 54,
+          "fn": 3,
+          "support": 42
+        },
+        "PAN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 17,
+          "support": 17
+        },
+        "PERSON": {
+          "precision": 0.9783,
+          "recall": 0.9626,
+          "f1": 0.9704,
+          "tp": 180,
+          "fp": 4,
+          "fn": 7,
+          "support": 187
+        },
+        "PHONE": {
+          "precision": 1.0,
+          "recall": 0.2045,
+          "f1": 0.3396,
+          "tp": 9,
+          "fp": 0,
+          "fn": 35,
+          "support": 44
+        },
+        "SSN": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 9,
+          "fp": 0,
+          "fn": 0,
+          "support": 9
+        }
+      },
+      "hardNegatives": {
+        "fpRate": 0.3,
+        "flagged": 21,
+        "total": 70,
+        "byKind": {
+          "bad_card": {
+            "flagged": 3,
+            "total": 14
+          },
+          "git_sha": {
+            "flagged": 0,
+            "total": 6
+          },
+          "order_id": {
+            "flagged": 0,
+            "total": 14
+          },
+          "sku": {
+            "flagged": 6,
+            "total": 6
+          },
+          "ticket": {
+            "flagged": 0,
+            "total": 6
+          },
+          "timestamp": {
+            "flagged": 0,
+            "total": 6
+          },
+          "txn": {
+            "flagged": 0,
+            "total": 6
+          },
+          "version": {
+            "flagged": 12,
+            "total": 12
+          }
+        }
+      },
+      "cleanFpRate": 0.02,
+      "latencyMs": {
+        "p50": 29.0,
+        "p95": 31.6,
+        "mean": 28.9,
+        "serverP50": 28.0
+      },
+      "fallbacks": 0,
+      "errors": {
+        "falseNegatives": [
+          {
+            "id": "pii-0002",
+            "category": "PHONE",
+            "text": "Summarise this ticket: Anvi Konda (⟦360-420-5116⟧) says the refund to account DE889407816…"
+          },
+          {
+            "id": "pii-0003",
+            "category": "AADHAAR",
+            "text": "My Aadhaar is ⟦3316-4752-5533⟧ and PAN WVUPC9283F. Can you check if my…"
+          },
+          {
+            "id": "pii-0003",
+            "category": "PAN",
+            "text": "My Aadhaar is 3316-4752-5533 and PAN ⟦WVUPC9283F⟧. Can you check if my KYC form is filled…"
+          },
+          {
+            "id": "pii-0005",
+            "category": "MEDICAL",
+            "text": "… born on 26/04/1974, was diagnosed with ⟦celiac disease⟧ last year. Suggest a diet plan."
+          },
+          {
+            "id": "pii-0006",
+            "category": "API_KEY",
+            "text": "Our AWS key ⟦g\u0068p_ren68K4TunPFz46PDjqipVJIqVLB5LzxoiGF⟧ stopped working after the deploy. What …"
+          },
+          {
+            "id": "pii-0008",
+            "category": "BANK_ACCOUNT",
+            "text": "…Smith will transfer the deposit to IBAN ⟦6978480184514627⟧ by Friday."
+          },
+          {
+            "id": "pii-0010",
+            "category": "PHONE",
+            "text": "The customer Ryan Watson called from ⟦+91-6489325288⟧ about their SSN 001-77-5311 being used …"
+          },
+          {
+            "id": "pii-0012",
+            "category": "IFSC",
+            "text": "Is this IFSC ⟦ICIC0896383⟧ valid for NEFT to account 5787133150983…"
+          },
+          {
+            "id": "pii-0012",
+            "category": "BANK_ACCOUNT",
+            "text": "…C ICIC0896383 valid for NEFT to account ⟦5787133150983930⟧?"
+          },
+          {
+            "id": "pii-0014",
+            "category": "MEDICAL",
+            "text": "…other is on medication for diabetes and ⟦migraine⟧. What foods should she avoid?"
+          }
+        ],
+        "falsePositives": [
+          {
+            "id": "pii-0003",
+            "category": "ORGANIZATION",
+            "text": "…and PAN WVUPC9283F. Can you check if my ⟦KYC⟧ form is filled correctly?"
+          },
+          {
+            "id": "pii-0008",
+            "category": "CREDIT_CARD",
+            "text": "…Smith will transfer the deposit to IBAN ⟦6978480184514627⟧ by Friday."
+          },
+          {
+            "id": "pii-0012",
+            "category": "ORGANIZATION",
+            "text": "Is this ⟦IFSC ICIC0896383⟧ valid for NEFT to account 5787133150983…"
+          },
+          {
+            "id": "pii-0016",
+            "category": "ORGANIZATION",
+            "text": "…3UdRPPgdzUvZ3gpmmICiBlrDp. Why does the ⟦CI⟧ job fail?"
+          },
+          {
+            "id": "pii-0018",
+            "category": "LOCATION",
+            "text": "Book a table for ⟦Saumya Mall⟧ at 8pm and send the confirmation to (87…"
+          },
+          {
+            "id": "pii-0020",
+            "category": "ORGANIZATION",
+            "text": "…s pay into GB54NWBK91361939909169 using ⟦IFSC KKBK0854353⟧ asap"
+          },
+          {
+            "id": "pii-0021",
+            "category": "ORGANIZATION",
+            "text": "⟦Pahal Oak⟧ has a history of cancer. Write a sick-l…"
+          },
+          {
+            "id": "pii-0033",
+            "category": "ORGANIZATION",
+            "text": "…and PAN HZGPE0037T. Can you check if my ⟦KYC⟧ form is filled correctly?"
+          },
+          {
+            "id": "pii-0040",
+            "category": "ORGANIZATION",
+            "text": "The customer ⟦Lajita Mall⟧ called from +91-6665876036 about their …"
+          },
+          {
+            "id": "pii-0042",
+            "category": "ORGANIZATION",
+            "text": "Is this ⟦IFSC UTIB0065627⟧ valid for NEFT to account 69901627204?"
+          }
+        ],
+        "falseNegativeCount": 161,
+        "falsePositiveCount": 82
+      }
+    },
+    "HYBRID": {
+      "lenient": {
+        "precision": 0.9168,
+        "recall": 0.9544,
+        "f1": 0.9352,
+        "tp": 628,
+        "fp": 57,
+        "fn": 30
+      },
+      "strict": {
+        "precision": 0.9022,
+        "recall": 0.9392,
+        "f1": 0.9203,
+        "tp": 618,
+        "fp": 67,
+        "fn": 40
+      },
+      "macroF1": 0.9403,
+      "byCategory": {
+        "AADHAAR": {
+          "precision": 0.9118,
+          "recall": 1.0,
+          "f1": 0.9538,
+          "tp": 31,
+          "fp": 3,
+          "fn": 0,
+          "support": 31
+        },
+        "API_KEY": {
+          "precision": 1.0,
+          "recall": 0.5769,
+          "f1": 0.7317,
+          "tp": 15,
+          "fp": 0,
+          "fn": 11,
+          "support": 26
+        },
+        "BANK_ACCOUNT": {
+          "precision": 1.0,
+          "recall": 0.9722,
+          "f1": 0.9859,
+          "tp": 35,
+          "fp": 0,
+          "fn": 1,
+          "support": 36
+        },
+        "CREDIT_CARD": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 30,
+          "fp": 0,
+          "fn": 0,
+          "support": 30
+        },
+        "DATE_OF_BIRTH": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 26,
+          "fp": 0,
+          "fn": 0,
+          "support": 26
+        },
+        "EMAIL": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 49,
+          "fp": 0,
+          "fn": 0,
+          "support": 49
+        },
+        "IFSC": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 18,
+          "fp": 0,
+          "fn": 0,
+          "support": 18
+        },
+        "IP_ADDRESS": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 34,
+          "fp": 0,
+          "fn": 0,
+          "support": 34
+        },
+        "LOCATION": {
+          "precision": 0.869,
+          "recall": 0.9865,
+          "f1": 0.9241,
+          "tp": 73,
+          "fp": 11,
+          "fn": 1,
+          "support": 74
+        },
+        "MEDICAL": {
+          "precision": 1.0,
+          "recall": 0.8,
+          "f1": 0.8889,
+          "tp": 28,
+          "fp": 0,
+          "fn": 7,
+          "support": 35
+        },
+        "ORGANIZATION": {
+          "precision": 0.5,
+          "recall": 0.9286,
+          "f1": 0.65,
+          "tp": 39,
+          "fp": 39,
+          "fn": 3,
+          "support": 42
+        },
+        "PAN": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 17,
+          "fp": 0,
+          "fn": 0,
+          "support": 17
+        },
+        "PERSON": {
+          "precision": 0.9783,
+          "recall": 0.9626,
+          "f1": 0.9704,
+          "tp": 180,
+          "fp": 4,
+          "fn": 7,
+          "support": 187
+        },
+        "PHONE": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 44,
+          "fp": 0,
+          "fn": 0,
+          "support": 44
+        },
+        "SSN": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "tp": 9,
+          "fp": 0,
+          "fn": 0,
+          "support": 9
+        }
+      },
+      "hardNegatives": {
+        "fpRate": 0.1571,
+        "flagged": 11,
+        "total": 70,
+        "byKind": {
+          "bad_card": {
+            "flagged": 5,
+            "total": 14
+          },
+          "git_sha": {
+            "flagged": 0,
+            "total": 6
+          },
+          "order_id": {
+            "flagged": 0,
+            "total": 14
+          },
+          "sku": {
+            "flagged": 6,
+            "total": 6
+          },
+          "ticket": {
+            "flagged": 0,
+            "total": 6
+          },
+          "timestamp": {
+            "flagged": 0,
+            "total": 6
+          },
+          "txn": {
+            "flagged": 0,
+            "total": 6
+          },
+          "version": {
+            "flagged": 0,
+            "total": 12
+          }
+        }
+      },
+      "cleanFpRate": 0.02,
+      "latencyMs": {
+        "p50": 28.8,
+        "p95": 31.1,
+        "mean": 28.4,
+        "serverP50": 28.0
+      },
+      "fallbacks": 0,
+      "errors": {
+        "falseNegatives": [
+          {
+            "id": "pii-0005",
+            "category": "MEDICAL",
+            "text": "… born on 26/04/1974, was diagnosed with ⟦celiac disease⟧ last year. Suggest a diet plan."
+          },
+          {
+            "id": "pii-0006",
+            "category": "API_KEY",
+            "text": "Our AWS key ⟦g\u0068p_ren68K4TunPFz46PDjqipVJIqVLB5LzxoiGF⟧ stopped working after the deploy. What …"
+          },
+          {
+            "id": "pii-0014",
+            "category": "MEDICAL",
+            "text": "…other is on medication for diabetes and ⟦migraine⟧. What foods should she avoid?"
+          },
+          {
+            "id": "pii-0018",
+            "category": "PERSON",
+            "text": "Book a table for ⟦Saumya Mall⟧ at 8pm and send the confirmation to (87…"
+          },
+          {
+            "id": "pii-0021",
+            "category": "PERSON",
+            "text": "⟦Pahal Oak⟧ has a history of cancer. Write a sick-l…"
+          },
+          {
+            "id": "pii-0036",
+            "category": "API_KEY",
+            "text": "Our AWS key ⟦g\u0068p_pjPSa5W3X4gXBolZ9SHDdJp62hDiZDQHJMu8⟧ stopped working after the deploy. What …"
+          },
+          {
+            "id": "pii-0040",
+            "category": "PERSON",
+            "text": "The customer ⟦Lajita Mall⟧ called from +91-6665876036 about their …"
+          },
+          {
+            "id": "pii-0051",
+            "category": "ORGANIZATION",
+            "text": "… a sick-leave note for their manager at ⟦Zoho⟧."
+          },
+          {
+            "id": "pii-0081",
+            "category": "PERSON",
+            "text": "⟦Amara Oak⟧ has a history of migraine. Write a sick…"
+          },
+          {
+            "id": "pii-0081",
+            "category": "MEDICAL",
+            "text": "Amara Oak has a history of ⟦migraine⟧. Write a sick-leave note for their mana…"
+          }
+        ],
+        "falsePositives": [
+          {
+            "id": "pii-0003",
+            "category": "ORGANIZATION",
+            "text": "…and PAN WVUPC9283F. Can you check if my ⟦KYC⟧ form is filled correctly?"
+          },
+          {
+            "id": "pii-0016",
+            "category": "ORGANIZATION",
+            "text": "…3UdRPPgdzUvZ3gpmmICiBlrDp. Why does the ⟦CI⟧ job fail?"
+          },
+          {
+            "id": "pii-0018",
+            "category": "LOCATION",
+            "text": "Book a table for ⟦Saumya Mall⟧ at 8pm and send the confirmation to (87…"
+          },
+          {
+            "id": "pii-0021",
+            "category": "ORGANIZATION",
+            "text": "⟦Pahal Oak⟧ has a history of cancer. Write a sick-l…"
+          },
+          {
+            "id": "pii-0033",
+            "category": "ORGANIZATION",
+            "text": "…and PAN HZGPE0037T. Can you check if my ⟦KYC⟧ form is filled correctly?"
+          },
+          {
+            "id": "pii-0040",
+            "category": "ORGANIZATION",
+            "text": "The customer ⟦Lajita Mall⟧ called from +91-6665876036 about their …"
+          },
+          {
+            "id": "pii-0042",
+            "category": "LOCATION",
+            "text": "Is this IFSC UTIB0065627 valid for ⟦NEFT⟧ to account 69901627204?"
+          },
+          {
+            "id": "pii-0046",
+            "category": "LOCATION",
+            "text": "Here is my .env: ⟦GITHUB_TOKEN⟧=cWb8pm1bNjpiEQhK8nDSqXxkMM9VThX0k9tgLb7…"
+          },
+          {
+            "id": "pii-0046",
+            "category": "ORGANIZATION",
+            "text": "…K8nDSqXxkMM9VThX0k9tgLb7t. Why does the ⟦CI⟧ job fail?"
+          },
+          {
+            "id": "pii-0063",
+            "category": "ORGANIZATION",
+            "text": "…and PAN LNKPK1256W. Can you check if my ⟦KYC⟧ form is filled correctly?"
+          }
+        ],
+        "falseNegativeCount": 30,
+        "falsePositiveCount": 57
+      }
+    }
+  },
+  "injection": {
+    "accuracy": 0.9427,
+    "precision": 0.74,
+    "recall": 1.0,
+    "f1": 0.8506,
+    "auc": 0.9958,
+    "tp": 74,
+    "fp": 26,
+    "fn": 0,
+    "tn": 354,
+    "positives": 74,
+    "negatives": 380,
+    "benignTriggerFpRate": 0.3333,
+    "model": "protectai/deberta-v3-base-prompt-injection-v2",
+    "latencyMs": {
+      "p50": 46.6,
+      "p95": 50.7
+    }
+  },
+  "highlights": {
+    "f1": {
+      "regex": 0.55,
+      "hybrid": 0.9352,
+      "delta": 0.3852
+    },
+    "recall": {
+      "regex": 0.4225,
+      "hybrid": 0.9544
+    },
+    "precision": {
+      "regex": 0.7875,
+      "hybrid": 0.9168
+    },
+    "hardNegativeFpReduction": 0.8429,
+    "falsePositives": {
+      "regex": 75,
+      "hybrid": 57
+    }
+  },
+  "durationSeconds": 47.4
+}
