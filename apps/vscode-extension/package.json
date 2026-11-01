@@ -114,6 +114,7 @@
     ]
   },
   "scripts": {
+    "dev": "code --extensionDevelopmentPath=.",
     "test": "node --test test/unit/*.test.js",
     "test:integration": "node test/integration/run.js",
     "package": "node scripts/package.js"

@@ -17,6 +17,7 @@
     "test:cli": "npm --prefix packages/cli test",
     "test:extension": "npm --prefix apps/vscode-extension test",
     "test:extension:integration": "npm --prefix apps/vscode-extension run test:integration",
+    "dev:extension": "npm --prefix apps/vscode-extension run dev",
     "package:extension": "npm --prefix apps/vscode-extension run package",
     "test:backend": "npm --prefix apps/backend test",
     "test:ml": "cd apps/ml-service && .venv/bin/python -m pytest -q",

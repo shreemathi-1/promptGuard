@@ -60,7 +60,8 @@ AWS's `AKIAIOSFODNN7EXAMPLE` or the test card `4111 1111 1111 1111`.
 Plain JavaScript, no build step and no npm dependencies.
 
 ```bash
-# Run: open apps/vscode-extension in VS Code and press F5
+# Run from source (opens a new VS Code window with the extension loaded):
+npm run dev               # or open apps/vscode-extension in VS Code and press F5
 npm test                  # unit tests (node:test, with a mocked vscode API)
 npm run test:integration  # runs the suite inside your installed VS Code
 npm run package           # builds dist/promptguard-<version>.vsix (no vsce needed)
