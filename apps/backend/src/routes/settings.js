@@ -2,7 +2,7 @@ const express = require('express');
 const { query } = require('../config/db');
 
 const router = express.Router();
-
+//settings page
 // ── Allowed settings registry ─────────────────────────────────────────────────
 //
 // Defines every setting the API will expose.
